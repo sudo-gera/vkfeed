@@ -208,7 +208,7 @@ while st:
   hostPort+=1
 
 try:
-	run(["termux-webopen","http://127.0.0.1:%s" % (hostPort)])
+	run(["termux-open-url","http://127.0.0.1:%s" % (hostPort)])
 except:
 	import webbrowser
 	print("http://127.0.0.1:%s" % (hostPort))
