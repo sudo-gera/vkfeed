@@ -28,7 +28,8 @@ url=open(str(Path.home())+'/url').read()
 token=url.split('#')[1].split('&')[0].split('=')[1]
 
 neew_new=1
-wifi_en=10
+wifi_de=64
+wifi_en=wifi_de
 
 def items(q):
 	if type(q) == type(dict()):
@@ -65,7 +66,7 @@ def api(path,data=''):
 def wifi():
 	global wifi_en
 	try:
-		if wifi_en<10:
+		if wifi_en<wifi_de:
 			wifi_en+=1
 			return 1
 		else:
