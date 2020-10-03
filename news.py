@@ -11,7 +11,7 @@ from urllib.parse import quote
 from time import sleep
 from time import time
 from time import asctime
-from traceback import format_exc as fo
+from traceback import format_exc as error
 from os.path import exists
 from os import mkdir
 from subprocess import run
@@ -27,6 +27,7 @@ url=open(str(Path.home())+'/url').read()
 token=url.split('#')[1].split('&')[0].split('=')[1]
 
 neew_new=1
+wifi_en=10
 
 def items(q):
 	if type(q) == type(dict()):
@@ -73,6 +74,7 @@ def wifi():
 			else:
 				return 0
 	except:
+		print(error())
 		return 1
 
 def manager():
@@ -109,7 +111,7 @@ def feed(start_=None):
 				d=d['first_name']+' '+d['last_name']
 				w['source_name']=d
 		except:
-			pass
+			print(error())
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	next_=q['next_from']
 	q=q['items']
