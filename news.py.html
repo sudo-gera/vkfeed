@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>vkfeed</title>
+	<style type="text/css">
+		.post{
+			border: 1px solid aqua;
+		}
+	</style>
+	<script type="text/javascript">
+
+		posts=[]
+
+		function getScrollPercent() {
+		var h = document.documentElement, 
+			b = document.body,
+			st = 'scrollTop',
+			sh = 'scrollHeight';
+			return (h[st]||b[st]) / ((h[sh]||b[sh]) - h.clientHeight);
+		}
+
+		function onscroll(){
+			p=getScrollPercent();
+			if (p>0.75){
+				if (posts.length>0){
+					p=posts[posts.length-1]
+					load('page_'+p.split('-->')[0])
+				}
+				else{
+					load()
+				}
+			}
+		}
+
+		window.addEventListener('scroll',onscroll)
+		window.addEventListener('DOMContentLoaded', onload)
+		
+		function onload(){
+			load('load')
+		}
+
+		function load(url=''){
+			fetch('/'+url).then(function(r){
+				r.json().then(function(j){
+					for (s of j){
+						posts.push(s)
+					}
+					show()
+				})
+			})
+		}
+
+		function show(){
+			html=''
+			for (post of posts){
+				html+=post
+			}
+			document.getElementById('body').innerHTML=html
+		}
+
+	</script>
+</head>
+<body>
+	<div id="body"></div>
+</body>
+</html>
