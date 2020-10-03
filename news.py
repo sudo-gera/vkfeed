@@ -14,6 +14,7 @@ from time import asctime
 from traceback import format_exc as error
 from os.path import exists
 from os import mkdir
+from os import popen
 from subprocess import run
 from webbrowser import open as webopen
 from sys import argv
