@@ -71,8 +71,10 @@ def wifi():
 		else:
 			if loads(popen('termux-wifi-connectioninfo').read())['supplicant_state'] == 'COMPLETED':
 				wifi_en=0
+				print('wifi on')
 				return 1
 			else:
+				print('wifi off')
 				return 0
 	except:
 		print(error())
