@@ -149,7 +149,6 @@ def feed(start_=None):
 				while wifi()==0:
 					sleep(4)
 				sleep(0.1)
-				print('urlopen image')
 				open(home+'.vkfeed/'+name,'wb').write(urlopen(url).read())
 				w['photos'].append(name)
 	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
