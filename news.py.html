@@ -4,7 +4,7 @@
 	<title>vkfeed</title>
 	<style type="text/css">
 		.post{
-			border: 1px solid aqua;
+			border: 4px solid aqua;
 		}
 	</style>
 	<script type="text/javascript">
@@ -45,18 +45,22 @@
 					for (s of j){
 						posts.push(s)
 					}
-					show()
 				})
 			})
 		}
 
 		function show(){
 			html=''
+			posts=posts.filter((post,pos) => {
+				return posts.indexOf(post)==pos
+			})
 			for (post of posts){
 				html+=post
 			}
 			document.getElementById('body').innerHTML=html
 		}
+
+		setInterval(show,1000)
 
 	</script>
 </head>

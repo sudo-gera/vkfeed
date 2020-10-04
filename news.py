@@ -15,6 +15,8 @@ from traceback import format_exc as error
 from os.path import exists
 from os import mkdir
 from os import popen
+from os import listdir
+from os import remove
 from subprocess import run
 from webbrowser import open as webopen
 from sys import argv
@@ -119,14 +121,17 @@ def feed(start_=None):
 				d=d['name']
 				w['source_name']=d
 			else:
-				d=[e for e in q['groups'] if e['id']+w['source_id']==0]
+				d=[e for e in q['profiles'] if e['id']==w['source_id']]
 				d=d[0]
 				d=d['first_name']+' '+d['last_name']
 				w['source_name']=d
 		except:
 			print(error())
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
-	next_=q['next_from']
+	try:
+		next_=q['next_from']
+	except:
+		next_=None
 	q=q['items']
 	for w in q:
 		w['photos']=[]
@@ -144,12 +149,16 @@ def feed(start_=None):
 				while wifi()==0:
 					sleep(4)
 				sleep(0.1)
+				print('urlopen image')
 				open(home+'.vkfeed/'+name,'wb').write(urlopen(url).read())
 				w['photos'].append(name)
 	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
 	q=dict(q)
 	for w in q:
-		db[w]=q[w]
+		if [e for e in db.keys() if db[e]['orig']==q[w]['orig']]==[]:
+			db[w]=q[w]
+		else:
+			next_=None
 	open(home+'.vkfeed/db.json','w').write(dumps(db))
 	return next_
 
@@ -161,6 +170,15 @@ try:
 except:
 	db=dict()
 
+tn=time()
+for w in listdir(home+'/vkfeed/'):
+	w=w.split('.')
+	try:
+		if int(w[1])<tn-3600*24*7:
+			remove(home+'/vkfeed/'+'.'.join(w))
+	except:
+		pass
+
 Process(target=manager).start()
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -169,7 +187,7 @@ import os
 
 
 def makepage(keys):
-	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
+	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
@@ -190,7 +208,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
 			keys=list(db.keys())
-			keys=sorted(keys)[-8:][::-1]
+			keys=sorted(keys)[-16:][::-1]
 			keys=makepage(keys)
 			keys=dumps(keys)
 			self.wfile.write(keys.encode())
@@ -200,7 +218,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			keys=list(db.keys())
 			keys=sorted(keys)
-			keys=[w for w in keys if w<path][-8:][::-1]
+			keys=[w for w in keys if w<path][-16:][::-1]
 			keys=makepage(keys)
 			keys=dumps(keys)
 			self.wfile.write(keys.encode())
@@ -208,6 +226,8 @@ class MyServer(BaseHTTPRequestHandler):
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
+	def log_message(*a):
+		pass
 
 
 hostPort = 9876
