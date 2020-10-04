@@ -94,10 +94,16 @@ def manager():
 		neew_new=1
 	while 1:
 		if neew_new:
-			d=feed()
-			neew_new=0
+			try:
+				d=feed()
+				neew_new=0
+			except:
+				print(error())
 		else:
-			d=feed(d)
+			try:
+				d=feed(d)
+			except:
+				print(error())
 	
 def feed(start_=None):
 	global db
@@ -163,7 +169,7 @@ import os
 
 
 def makepage(keys):
-	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5>'+''.join(['<img src='+e+' width="2000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
+	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
