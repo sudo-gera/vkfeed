@@ -66,6 +66,8 @@ def api(path,data=''):
 
 def wifi():
 	global wifi_en,wifi_er,wifi_de
+	if wifi_er:
+		return 1
 	try:
 		if wifi_en<wifi_de:
 			wifi_en+=1
@@ -161,7 +163,7 @@ import os
 
 
 def makepage(keys):
-	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5>'+''.join(['<h6><img src='+e+' width="100vw"></h6>' for e in db[w]['photos']])+'</div>\n' for w in keys]
+	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5>'+''.join(['<img src='+e+' width="2000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
