@@ -4,12 +4,16 @@
 	<title>vkfeed</title>
 	<style type="text/css">
 		.post{
-			border: 16px solid navy;
+			border: 16px solid #160057;
+			overflow-wrap: anywhere;
+			text-align: center;
+		}
+		body {
+			background-color: #13002f;
+			color: #FFFFFF;
 		}
 	</style>
 	<script type="text/javascript">
-
-		document.body.style.background = "#0800F0";
 
 		posts=[]
 
@@ -41,17 +45,24 @@
 			load('load')
 		}
 
+		isnew=0
+
 		function load(url=''){
 			fetch('/'+url).then(function(r){
 				r.json().then(function(j){
 					for (s of j){
 						posts.push(s)
 					}
+					isnew=1
 				})
 			})
 		}
 
 		function show(){
+			if (isnew==0){
+				return
+			}
+			isnew=0
 			html=''
 			posts=posts.filter((post,pos) => {
 				return posts.indexOf(post)==pos
