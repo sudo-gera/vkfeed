@@ -211,13 +211,15 @@ class MyServer(BaseHTTPRequestHandler):
 			keys=makepage(keys)
 			keys=dumps(keys)
 			self.wfile.write(keys.encode())
-		elif path.startswith('page_<!--'):
-			path=path[9:]
+		elif path.startswith('page'):
+			count,path=path.split('<!--',1)
+			count=count[4:]
+			count=int(count)
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
 			keys=list(db.keys())
 			keys=sorted(keys)
-			keys=[w for w in keys if w<path][-16:][::-1]
+			keys=[w for w in keys if w<path][-count:][::-1]
 			keys=makepage(keys)
 			keys=dumps(keys)
 			self.wfile.write(keys.encode())
