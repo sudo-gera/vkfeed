@@ -29,6 +29,7 @@ token=url.split('#')[1].split('&')[0].split('=')[1]
 
 neew_new=1
 wifi_de=64
+wifi_er=0
 wifi_en=wifi_de
 
 def items(q):
@@ -64,7 +65,7 @@ def api(path,data=''):
 		print(ret)
 
 def wifi():
-	global wifi_en
+	global wifi_en,wifi_er,wifi_de
 	try:
 		if wifi_en<wifi_de:
 			wifi_en+=1
@@ -72,13 +73,13 @@ def wifi():
 		else:
 			if loads(popen('termux-wifi-connectioninfo').read())['supplicant_state'] == 'COMPLETED':
 				wifi_en=0
-				print('wifi on')
 				return 1
 			else:
-				print('wifi off')
 				return 0
 	except:
-		print(error())
+		if wifi_er==0:
+			print('unable to check if internet is over wifi or mobile data')
+			wifi_er=1
 		return 1
 
 def manager():
@@ -160,7 +161,7 @@ import os
 
 
 def makepage(keys):
-	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5>'+''.join(['<h6><img src='+e+'>' for e in db[w]['photos']])+'</div>\n' for w in keys]
+	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6><a href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5>'+''.join(['<h6><img src='+e+' width="100vw"></h6>' for e in db[w]['photos']])+'</div>\n' for w in keys]
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
