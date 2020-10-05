@@ -51,22 +51,6 @@
 		////////////////////////////////////////////////////////////////////////////////////////////////
 //			document.getElementById('body').innerHTML=inner
 
-<<<<<<< HEAD
-=======
-		toscroll=-1
-
-		function autoscroll(){
-			if (posts.length>0){
-					p=posts[posts.length-1]
-					c=getCookie('length')
-					toscroll=getCookie('pix')
-					load('page'+c+p.split('-->')[0])
-			}
-			else{
-				load()
-			}
-		}
->>>>>>> e08fededee1630bb945572b5bfaee2a9253802c4
 
 		window.addEventListener('scroll',onscroll)
 		window.addEventListener('DOMContentLoaded', onload)
@@ -78,7 +62,7 @@
 
 
 		function onload(){
-			first=document.getElementById('body').innerHTML
+			first=document.getElementById('body').innerHTML.split('-->')[0]
 			if (getCookie('first')==first){
 				alert('wait')
 				window.scrollTo(getCookie('y'))
