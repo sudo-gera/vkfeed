@@ -17,6 +17,7 @@ from os import mkdir
 from os import popen
 from os import listdir
 from os import remove
+from os import rename
 from subprocess import run
 from webbrowser import open as webopen
 from sys import argv
@@ -148,7 +149,7 @@ def feed(start_=None):
 				name=str(time())+'.'+url.split('/')[-1].split('?')[0]
 				while wifi()==0:
 					sleep(4)
-				sleep(0.1)
+				sleep(0.3344554433)
 				open(home+'.vkfeed/'+name,'wb').write(urlopen(url).read())
 				w['photos'].append(name)
 	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
@@ -158,7 +159,8 @@ def feed(start_=None):
 			db[w]=q[w]
 		else:
 			next_=None
-	open(home+'.vkfeed/db.json','w').write(dumps(db))
+	open(home+'.vkfeed/db.json1','w').write(dumps(db))
+	rename(home+'.vkfeed/db.json1',home+'.vkfeed/db.json')
 	return next_
 
 if not exists(home+'.vkfeed'):
@@ -194,39 +196,31 @@ class MyServer(BaseHTTPRequestHandler):
 		path=self.path
 		path,arg=(path.split('?',1)+[''])[:2]
 		path=uqu(path)
-		path=path[1:]
+		if path[0]=='/':
+			path=path[1:]
 		if path=='':
+			try:
+				db=loads(open(home+'.vkfeed/db.json').read())
+			except:
+				db=dict()
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
-			self.wfile.write(open(argv[0]+'.html','rb').read())
+			keys=list(db.keys())
+			keys=sorted(keys)[::-1]
+			keys=['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
+			keys='\n'.join(keys)
+			self.wfile.write(open(argv[0]+'.html','r').read().replace('&&&&&&&&',keys).encode())
 		elif path == 'favicon.ico':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(open(argv[0]+'.favicon.ico','rb').read())
-		elif path == 'load':
-			self.send_header("Content-type", "text/html; charset=utf-8")
-			self.end_headers()
-			keys=list(db.keys())
-			keys=sorted(keys)[-16:][::-1]
-			keys=makepage(keys)
-			keys=dumps(keys)
-			self.wfile.write(keys.encode())
-		elif path.startswith('page'):
-			count,path=path.split('<!--',1)
-			count=count[4:]
-			count=int(count)
-			self.send_header("Content-type", "text/html; charset=utf-8")
-			self.end_headers()
-			keys=list(db.keys())
-			keys=sorted(keys)
-			keys=[w for w in keys if w<path][-count:][::-1]
-			keys=makepage(keys)
-			keys=dumps(keys)
-			self.wfile.write(keys.encode())
 		else:
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
-			self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
+			try:
+				self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
+			except:
+				self.wfile.write(open(argv[0]+'.favicon.ico','rb').read())
 	def log_message(*a):
 		pass
 
