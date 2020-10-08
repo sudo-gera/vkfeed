@@ -207,7 +207,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			keys=list(db.keys())
 			keys=sorted(keys)[::-1]
-			keys=['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
+			keys=['<!--'+w+'--><div class=post id='+w+'><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="100%"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
 			keys='\n'.join(keys)
 			self.wfile.write(open(argv[0]+'.html','r').read().replace('&&&&&&&&',keys).encode())
 		elif path == 'favicon.ico':
