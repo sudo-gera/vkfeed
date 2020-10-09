@@ -223,6 +223,7 @@ class MyServer(BaseHTTPRequestHandler):
 #			keys='\n'.join(keys)
 			keys=[{'date':w,**db[w]} for w in sorted(list(db.keys()))]
 			keys=[w for w in keys if w['text'] or w['photos']]
+			keys=keys[::-1]
 			if len(keys)==0:
 				keys.append({'date':'0.0.0','public':'vkfeed','text':'creating cache...\n wait 10 mintes and refresh','orig':'0_0','photos':[]})
 			keys=dumps(keys)
