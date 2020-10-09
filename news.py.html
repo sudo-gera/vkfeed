@@ -69,7 +69,10 @@
 			if (newposts!=null){
 				newposts-=start
 				for (i=start+postsinpage;i<start+newposts+postsinpage&&i<posts.length;i++){
-					body.innerHTML+=posttotext(posts[i])
+					if (posts[i].posted==0){
+						body.innerHTML+=posttotext(posts[i])
+						posts[i].posted=1
+					}
 				}
 				start+=newposts
 				if (start>posts.length){
@@ -147,6 +150,7 @@
 					}
 					for (post of posts){
 						post.index=i
+						post.posted=0
 						if (cs==post.date){
 							start=i
 						}
@@ -156,6 +160,7 @@
 					body.innerHTML=''
 					for (i=start;i<posts.length&&i<postsinpage+start;i++){
 						body.innerHTML+=posttotext(posts[i])
+						posts[i].posted=1
 					}
 				})
 			})
