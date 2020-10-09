@@ -24,6 +24,7 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
+from subprocess import check_output
 
 home=str(Path.home())+'/'
 
@@ -76,7 +77,7 @@ def wifi():
 			wifi_en+=1
 			return 1
 		else:
-			if loads(popen('termux-wifi-connectioninfo').read())['supplicant_state'] == 'COMPLETED':
+			if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
 				wifi_en=0
 				return 1
 			else:
@@ -84,7 +85,7 @@ def wifi():
 	except:
 		if wifi_er==0:
 			print('unable to check if internet is over wifi or mobile data')
-			wifi_er=1
+#			wifi_er=1
 		return 1
 
 def manager():
@@ -110,6 +111,7 @@ def manager():
 	
 def feed(start_=None):
 	global db
+	sleep(0.3333334)
 	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
 	for w in q['items']:
 		if 'text' not in w:
@@ -159,8 +161,9 @@ def feed(start_=None):
 			db[w]=q[w]
 		else:
 			next_=None
-	open(home+'.vkfeed/db.json1','w').write(dumps(db))
-	rename(home+'.vkfeed/db.json1',home+'.vkfeed/db.json')
+	print('saved')
+	open(home+'.vkfeed/db.json','w').write(dumps(db))
+#	rename(home+'.vkfeed/db.json1',home+'.vkfeed/db.json')
 	return next_
 
 if not exists(home+'.vkfeed'):
@@ -180,7 +183,8 @@ for w in listdir(home+'/vkfeed/'):
 	except:
 		pass
 
-Process(target=manager).start()
+proc=Process(target=manager)
+proc.start()
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
@@ -205,11 +209,22 @@ class MyServer(BaseHTTPRequestHandler):
 				db=dict()
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
-			keys=list(db.keys())
-			keys=sorted(keys)[::-1]
-			keys=['<!--'+w+'--><div class=post id='+w+'><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="100%"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
-			keys='\n'.join(keys)
-			self.wfile.write(open(argv[0]+'.html','r').read().replace('&&&&&&&&',keys).encode())
+			self.wfile.write(open(argv[0]+'.html','r').read().encode())
+		elif path=='json':
+			try:
+				db=loads(open(home+'.vkfeed/db.json').read())
+			except:
+				pass
+			self.send_header("Content-type", "text/html; charset=utf-8")
+			self.end_headers()
+#			keys=list(db.keys())
+#			keys=sorted(keys)[::-1]
+#			keys=['<!--'+w+'--><div class=post id='+w+'><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="100%"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
+#			keys='\n'.join(keys)
+			keys=[{'date':w,**db[w]} for w in db]
+			keys=dumps(keys)
+			loads(keys)
+			self.wfile.write(keys.encode())
 		elif path == 'favicon.ico':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
@@ -246,5 +261,6 @@ try:
 except KeyboardInterrupt:
     pass
 
+proc.terminate()
 myServer.server_close()
 print()

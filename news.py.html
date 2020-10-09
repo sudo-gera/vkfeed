@@ -49,33 +49,122 @@
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
-//			document.getElementById('body').innerHTML=inner
+//			document.getElementById('body').innerHTML=i
 
 
 		window.addEventListener('scroll',onscroll)
 		window.addEventListener('DOMContentLoaded', onload)
 
 
+		posts=[]
+		shownposts=[]
+		body=0
+		start=0
+		postsinpage=8
+		scrolledto=0
+
 		function onscroll(){
 			setCookie('y',Math.round(window.scrollY))
+			newposts=getoverpage()
+			if (newposts!=null){
+				newposts-=start
+				for (i=start+postsinpage;i<start+newposts+postsinpage&&i<posts.length;i++){
+					body.innerHTML+=posttotext(posts[i])
+				}
+				start+=newposts
+				if (start>posts.length){
+					start=posts.length
+				}
+				if (start>scrolledto){
+					scrolledto+=start
+				}
+				setCookie('start',posts[start].date)
+			}
 		}
 
+		function getoverpage(st=null,fi=null){
+			if (st==null){
+				st=start
+			}
+			if (fi==null){
+				fi=start+postsinpage
+			}
+			if (fi>posts.length){
+				fi=posts.length
+			}
+			if (posts.length==0){
+				console.log('len=0')
+				return
+			}
+			if (document.getElementById('_'+st).getBoundingClientRect().bottom>=0){
+				console.log('starting')
+				return 
+			}
+			if (fi<=st){
+				console.log('len<0')
+				return
+			}
+			if (fi-st==1){
+				return st
+			}
+			ce=(fi+st)/2
+			if (document.getElementById('_'+ce).getBoundingClientRect().bottom<0){
+				return getoverpage(ce,fi)
+			}
+			return getoverpage(st,ce)
+		}
 
-		function onload(){
+/*		function onload(){
 			first=document.getElementById('body').innerHTML.split('-->')[0]
 			if (getCookie('first')==first){
-				alert('wait')
 				window.scrollTo(getCookie('y'))
 			}else{
 				setCookie('first',first)
 			}
 		}
+*/
 
+		function posttotext(q){
+			text='<div class=post id=_'+q.index+'><h3>'+q.public+'</h3><h6><a target="_blank" href=https://vk.com/wall'+q.orig+'>original</a></h6><h5>'+q.text+'</h5><br>'
+			for (photo of q.photos){
+				text+='<img src='+photo+' width="100%"><br>'
+			}
+			text+='\n</div>\n'
+			return text
+		}
+
+		function onload(){
+			body=document.getElementById('body')
+			fetch('/json').then(function(r) {
+				r.json().then(function(json){
+					posts=json
+					start=0
+					cs=getCookie('start')
+					i=0
+					if (posts[0].date != getCookie('first')){
+						setCookie('first',posts[0].date)
+						cs=null
+					}
+					for (post of posts){
+						post.index=i
+						if (cs==post.date){
+							start=i
+						}
+						i++
+					}
+					scrolledto=start
+					body.innerHTML=''
+					for (i=start;i<posts.length&&i<postsinpage+start;i++){
+						body.innerHTML+=posttotext(posts[i])
+					}
+				})
+			})
+				}
 	</script>
 </head>
 <body>
 	<div id="body">
-		&&&&&&&&
+		loading...
 	</div>
 </body>
 </html>
