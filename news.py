@@ -222,7 +222,7 @@ class MyServer(BaseHTTPRequestHandler):
 #			keys=['<!--'+w+'--><div class=post id='+w+'><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="100%"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
 #			keys='\n'.join(keys)
 			keys=[{'date':w,**db[w]} for w in sorted(list(db.keys()))]
-			keys=[w for w in keys if w.text or w.photos]
+			keys=[w for w in keys if w['text'] or w['photos']]
 			if len(keys)==0:
 				keys.append({'date':'0.0.0','public':'vkfeed','text':'creating cache...\n wait 10 mintes and refresh','orig':'0_0','photos':[]})
 			keys=dumps(keys)
