@@ -28,8 +28,21 @@ from subprocess import check_output
 
 home=str(Path.home())+'/'
 
-url=open(str(Path.home())+'/url').read()
-token=url.split('#')[1].split('&')[0].split('=')[1]
+def token(check=0):
+	try:
+		return open(home+'.vkfeed/token').read()
+	except:
+		if check:
+			return
+	input('welcome to vkfeed. you will be redirected to the authorization page, where you need to grant all the permissions required for the application to work. After that, you should copy the url of the page and paste it there.\nPress enter to open the page...')
+	try:
+		run(['termux-open-url','https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1'])
+	except:
+		print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
+	url=input('now paste the url: ')
+	t=url.split('#')[1].split('&')[0].split('=')[1]
+	open(home+'.vkfeed/token','w').write(t)
+
 
 neew_new=1
 wifi_de=64
@@ -57,8 +70,7 @@ def api(path,data=''):
 			path+='?'
 	sleep(1/6)
 	data=data.encode()
-	global token
-	ret= loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token,data=data).read().decode())
+	ret= loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
 	try:
 		return items(ret['response'])
 	except:
@@ -84,7 +96,7 @@ def wifi():
 				return 0
 	except:
 		if wifi_er==0:
-			print('unable to check if internet is over wifi or mobile data')
+			print('unable to check if internet is over wifi or mobile data, try to run\npkg install termux-api')
 #			wifi_er=1
 		return 1
 
@@ -184,6 +196,7 @@ for w in listdir(home+'/vkfeed/'):
 		pass
 
 proc=Process(target=manager)
+token()
 proc.start()
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -257,7 +270,6 @@ while st:
 try:
 	run(["termux-open-url","http://127.0.0.1:%s" % (hostPort)])
 except:
-	import webbrowser
 	print("http://127.0.0.1:%s" % (hostPort))
 
 try:
