@@ -100,7 +100,6 @@
 				return
 			}
 			if (document.getElementById('_'+st).getBoundingClientRect().bottom>=0){
-				console.log('starting')
 				return 
 			}
 			if (fi<=st){
@@ -136,6 +135,11 @@
 			return text
 		}
 
+		function up(){
+			setCookie('up','1')
+			document.location.reload()
+		}
+
 		function onload(){
 			body=document.getElementById('body')
 			fetch('/json').then(function(r) {
@@ -144,8 +148,8 @@
 					start=0
 					cs=getCookie('start')
 					i=0
-					if (posts[0].date != getCookie('first')){
-						setCookie('first',posts[0].date)
+					if (getCookie('up')=='1'){
+						setCookie('up','0')
 						cs=null
 					}
 					for (post of posts){
@@ -168,6 +172,9 @@
 	</script>
 </head>
 <body>
+	<button onclick="up();return true">
+		scroll up
+	</button>
 	<div id="body">
 		loading...
 	</div>
