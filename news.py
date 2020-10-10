@@ -27,7 +27,14 @@ from multiprocessing import Process
 from subprocess import check_output
 
 home=str(Path.home())+'/'
-path=open(home+'.vkfeed/path').read()
+try:
+	path=open(home+'.vkfeed/path').read()
+except:
+	path = str(abspath(dirname(argv[0])))
+	if path[-1]!='/':
+		path+='/'
+	path=open(home+'.vkfeed/path','w').write(path)
+
 
 def token(check=0):
 	try:
