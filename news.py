@@ -28,13 +28,12 @@ from subprocess import check_output
 
 home=str(Path.home())+'/'
 try:
-	path=open(home+'.vkfeed/path').read()
+	repo=open(home+'.vkfeed/path').read()
 except:
-	path = str(abspath(dirname(argv[0])))
-	if path[-1]!='/':
-		path+='/'
-	open(home+'.vkfeed/path','w').write(path)
-
+	repo = str(abspath(dirname(argv[0])))
+	if repo[-1]!='/':
+		repo+='/'
+	open(home+'.vkfeed/path','w').write(repo)
 
 def token(check=0):
 	try:
@@ -217,7 +216,7 @@ def makepage(keys):
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
-		global home,path
+		global home,repo
 		self.send_response(200)
 		path=self.path
 		path,arg=(path.split('?',1)+[''])[:2]
@@ -231,7 +230,7 @@ class MyServer(BaseHTTPRequestHandler):
 				db=dict()
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
-			self.wfile.write(open(path+'feed.html','r').read().encode())
+			self.wfile.write(open(repo+'feed.html','r').read().encode())
 		elif path=='json':
 			try:
 				db=loads(open(home+'.vkfeed/db.json').read())
@@ -254,14 +253,14 @@ class MyServer(BaseHTTPRequestHandler):
 		elif path == 'favicon.ico':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
-			self.wfile.write(open(path+'favicon.ico','rb').read())
+			self.wfile.write(open(repo+'favicon.ico','rb').read())
 		else:
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			try:
 				self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
 			except:
-				self.wfile.write(open(path+'favicon.ico','rb').read())
+				self.wfile.write(open(repo+'favicon.ico','rb').read())
 	def log_message(*a):
 		pass
 
