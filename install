@@ -25,6 +25,7 @@ except:
 	print('installation failed. check internet connection. if it does not help, turn on mobile data and wifi hotspot and try again')
 termux=listdir('.')
 termux.sort(key=getmtime)
+print(termux)
 termux=termux[-1]
 try:
 	run(['dpkg','-i',termux[-1]])
