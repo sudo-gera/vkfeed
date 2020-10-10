@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ''':'
 pkg install python
 python3 $0 $@
@@ -33,38 +32,3 @@ except:
 	print('installation failed. turn on mobile data and wifi hotspot and try again')
 run(['ln','-s',path+'news.py',home+'../usr/bin/vkfeed'])
 print('installation complete. now you can run vkfeed command')
-=======
-''':'
-pkg install python3
-python3 @0 @$
-exit
-':'''
-open_=open
-from os import *
-from os.path import *
-from subprocess import*
-from pathlib import Path
-from sys import argv
-home=str(Path.home())+'/'
-path = str(abspath(dirname(argv[0])))
-if path[-1]!='/':
-	path+='/'
-mkdir(home+'.vkfeed')
-chdir(home+'.vkfeed')
-open_('path','w').write(path)
-try:
-	run(['pkg','download','termux-api'])
-except:
-	print('installation failed. check internet connection. if it does not help, turn on mobile data and wifi hotspot and try again')
-	exit()
-termux=listdir('.')
-termux.sort(key=getmtime)
-termux=termux[-1]
-try:
-	run(['dpkg','-i',termux[-1]])
-except:
-	print('installation failed. turn on mobile data and wifi hotspot and try again')
-	exit()
-run(['ln','-s',path+'news.py',home+'../usr/bin/vkfeed'])
-print('installation complete. now you can run vkfeed command')
->>>>>>> 42866e1cd482c7089657ca59c99c19ea2f379a36
