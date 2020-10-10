@@ -26,7 +26,6 @@ except:
 termux=listdir('.')
 termux=[w for w in termux if w.endswith('.deb')]
 termux.sort(key=getmtime)
-print(termux)
 termux=termux[-1]
 try:
 	run(['dpkg','-i',termux[-1]])
