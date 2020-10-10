@@ -28,7 +28,7 @@ termux=[w for w in termux if w.endswith('.deb')]
 termux.sort(key=getmtime)
 termux=termux[-1]
 try:
-	run(['dpkg','-i',termux[-1]])
+	run(['dpkg','-i',termux])
 except:
 	print('installation failed. turn on mobile data and wifi hotspot and try again')
 run(['ln','-s',path+'news.py',home+'../usr/bin/vkfeed'])
