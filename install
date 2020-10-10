@@ -20,7 +20,7 @@ except:
 chdir(home+'.vkfeed')
 open_('path','w').write(path)
 try:
-	run(['pkg','download','termux-api'])
+	run(['apt','download','termux-api'])
 except:
 	print('installation failed. check internet connection. if it does not help, turn on mobile data and wifi hotspot and try again')
 termux=listdir('.')
