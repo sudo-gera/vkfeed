@@ -33,7 +33,7 @@ except:
 	path = str(abspath(dirname(argv[0])))
 	if path[-1]!='/':
 		path+='/'
-	path=open(home+'.vkfeed/path','w').write(path)
+	open(home+'.vkfeed/path','w').write(path)
 
 
 def token(check=0):
@@ -217,6 +217,7 @@ def makepage(keys):
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
+		global home,path
 		self.send_response(200)
 		path=self.path
 		path,arg=(path.split('?',1)+[''])[:2]
