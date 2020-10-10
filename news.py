@@ -27,6 +27,7 @@ from multiprocessing import Process
 from subprocess import check_output
 
 home=str(Path.home())+'/'
+path=open(home+'.vkfeed/path').read()
 
 def token(check=0):
 	try:
@@ -173,8 +174,8 @@ def feed(start_=None):
 			db[w]=q[w]
 		else:
 			next_=None
-	print('saved')
 	open(home+'.vkfeed/db.json','w').write(dumps(db))
+	print(asctime(),'some new posts are loaded')
 #	rename(home+'.vkfeed/db.json1',home+'.vkfeed/db.json')
 	return next_
 
@@ -222,7 +223,7 @@ class MyServer(BaseHTTPRequestHandler):
 				db=dict()
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
-			self.wfile.write(open(argv[0]+'.html','r').read().encode())
+			self.wfile.write(open(path+'feed.html','r').read().encode())
 		elif path=='json':
 			try:
 				db=loads(open(home+'.vkfeed/db.json').read())
@@ -245,14 +246,14 @@ class MyServer(BaseHTTPRequestHandler):
 		elif path == 'favicon.ico':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
-			self.wfile.write(open(argv[0]+'.favicon.ico','rb').read())
+			self.wfile.write(open(path+'favicon.ico','rb').read())
 		else:
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			try:
 				self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
 			except:
-				self.wfile.write(open(argv[0]+'.favicon.ico','rb').read())
+				self.wfile.write(open(path+'favicon.ico','rb').read())
 	def log_message(*a):
 		pass
 

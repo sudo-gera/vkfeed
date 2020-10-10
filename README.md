@@ -1,17 +1,17 @@
 # vkfeed
-## instruction for android/termux:
+## instruction for installing on android:
 ###### open playmarket
 ###### install termux
 ###### install termux-api
-###### turn on mobile data and wifi hotspot
-###### open termux and type:
+###### check if your device is connected to internet
+###### open termux and type theese comands:
 ```
-pkg install python3 git termux-api
-cd ~
+pkg install git
 git clone https://github.com/sudo-gera/vkfeed
+vkfeed/install
 ```
 # run vkfeed:
 ###### open termux and type:
 ```
-~/vkfeed/news.py
+vkfeed
 ```

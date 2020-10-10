@@ -136,10 +136,6 @@
 			return text
 		}
 
-		function up(){
-			setCookie('up','1')
-		}
-
 		function onload(){
 			body=document.getElementById('body')
 			fetch('/json').then(function(r) {
@@ -148,9 +144,9 @@
 					start=0
 					cs=getCookie('start')
 					i=0
-					if (getCookie('up')=='1'){
-						setCookie('up','0')
-						cs=undefined
+					if (posts[0].date != getCookie('first')){
+						setCookie('first',posts[0].date)
+						cs=null
 					}
 					for (post of posts){
 						post.index=i
@@ -172,9 +168,6 @@
 	</script>
 </head>
 <body>
-	<button onclick="up();return true">
-		scroll to the beginning of the page
-	</button>
 	<div id="body">
 		loading...
 	</div>
