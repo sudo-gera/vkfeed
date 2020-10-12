@@ -254,7 +254,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(open(repo+'favicon.ico','rb').read())
-		else:
+		elif path[0].isdigit():
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			try:
