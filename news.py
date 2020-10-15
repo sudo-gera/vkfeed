@@ -25,6 +25,8 @@ from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
 from subprocess import check_output
+from os.path import abspath
+from os.path import dirname
 
 home=str(Path.home())+'/'
 try:

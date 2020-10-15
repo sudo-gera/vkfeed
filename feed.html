@@ -23,6 +23,7 @@
 			return (h[st]||b[st]) / ((h[sh]||b[sh]) - h.clientHeight);
 		}
 
+/*
 		function getCookie(name) {
 			let matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
 			return matches ? decodeURIComponent(matches[1]) : undefined;
@@ -48,6 +49,16 @@
 			document.cookie = updatedCookie;
 		}
 
+*/
+
+		function setCookie(name,value){
+			localStorage.setItem(name,value)
+		}
+
+		function getCookie(name){
+			return localStorage.getItem(name)
+		}
+
 		////////////////////////////////////////////////////////////////////////////////////////////////
 //			document.getElementById('body').innerHTML=i
 
@@ -64,7 +75,7 @@
 		scrolledto=0
 
 		function onscroll(){
-			setCookie('y',Math.round(window.scrollY))
+			//setCookie('y',Math.round(window.scrollY))
 			newposts=getoverpage()
 			if (newposts!=null){
 				newposts-=start
