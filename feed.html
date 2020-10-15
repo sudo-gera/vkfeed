@@ -4,12 +4,13 @@
 	<title>vkfeed</title>
 	<style type="text/css">
 		.post{
-			border: 16px solid #160057;
+			background-color: #13002f;
 			overflow-wrap: anywhere;
 			text-align: center;
+			border-radius: 8px;
 		}
 		body {
-			background-color: #13002f;
+			background-color: #160057;
 			color: #FFFFFF;
 		}
 	</style>
@@ -138,11 +139,11 @@
 */
 
 		function posttotext(q){
-			text='<div class=post id=_'+q.index+'><h3>'+q.public+'</h3><h6><a target="_blank" href=https://vk.com/wall'+q.orig+'>original</a></h6><h5>'+q.text+'</h5><br>'
+			text='<div class=post id=_'+q.index+'><h3>'+q.public+'</h3><h5>'+q.text+'</h5><br>'
 			for (photo of q.photos){
 				text+='<img src='+photo+' width="100%"><br>'
 			}
-			text+='\n</div>\n'
+			text+='\n<h6><form action="https://vk.com/wall'+q.orig+'"><input type="submit" value="original" /></form></h6><br></div>\n'
 			return text
 		}
 
