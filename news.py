@@ -253,11 +253,11 @@ class MyServer(BaseHTTPRequestHandler):
 			keys=dumps(keys)
 			loads(keys)
 			self.wfile.write(keys.encode())
-		elif path[0] in '1234567890':
+		elif path[0] in '1234567890' and '/' not in path:
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(open(cache+path,'rb').read())
-		elif path[0] in 'qwertyuiopasdfghjklzxcvbnm':
+		elif path[0] in 'qwertyuiopasdfghjklzxcvbnm' and '/' not in path:
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
