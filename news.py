@@ -252,10 +252,6 @@ class MyServer(BaseHTTPRequestHandler):
 			keys=dumps(keys)
 			loads(keys)
 			self.wfile.write(keys.encode())
-		elif path == 'favicon.ico':
-			self.send_header("Content-type", "file/file")
-			self.end_headers()
-			self.wfile.write(open(repo+'favicon.ico','rb').read())
 		elif path[0].isdigit():
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
@@ -263,6 +259,10 @@ class MyServer(BaseHTTPRequestHandler):
 				self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
 			except:
 				self.wfile.write(open(repo+'favicon.ico','rb').read())
+		else:
+			self.send_header("Content-type", "file/file")
+			self.end_headers()
+			self.wfile.write(open(repo+path,'rb').read())
 	def log_message(*a):
 		pass
 
