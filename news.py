@@ -29,17 +29,19 @@ from os.path import abspath
 from os.path import dirname
 
 home=str(Path.home())+'/'
+cache=home+'.vkfeed/'
+
 try:
-	repo=open(home+'.vkfeed/path').read()
+	repo=open(cache+'path').read()
 except:
 	repo = str(abspath(dirname(argv[0])))
 	if repo[-1]!='/':
 		repo+='/'
-	open(home+'.vkfeed/path','w').write(repo)
+	open(cache+'path','w').write(repo)
 
 def token(check=0):
 	try:
-		return open(home+'.vkfeed/token').read()
+		return open(cache+'token').read()
 	except:
 		if check:
 			return
@@ -50,7 +52,7 @@ def token(check=0):
 		print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
 	url=input('now paste the url: ')
 	t=url.split('#')[1].split('&')[0].split('=')[1]
-	open(home+'.vkfeed/token','w').write(t)
+	open(cache+'token','w').write(t)
 
 
 neew_new=1
@@ -173,7 +175,7 @@ def feed(start_=None):
 				while wifi()==0:
 					sleep(4)
 				sleep(0.3344554433)
-				open(home+'.vkfeed/'+name,'wb').write(urlopen(url).read())
+				open(cache+name,'wb').write(urlopen(url).read())
 				w['photos'].append(name)
 	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
 	q=dict(q)
@@ -182,25 +184,24 @@ def feed(start_=None):
 			db[w]=q[w]
 		else:
 			next_=None
-	open(home+'.vkfeed/db.json','w').write(dumps(db))
+	open(cache+'db.json','w').write(dumps(db))
 	print(asctime(),'some new posts are loaded')
-#	rename(home+'.vkfeed/db.json1',home+'.vkfeed/db.json')
 	return next_
 
-if not exists(home+'.vkfeed'):
-	mkdir(home+'.vkfeed')
+if not exists(cache):
+	mkdir(cache)
 
 try:
-	db=loads(open(home+'.vkfeed/db.json').read())
+	db=loads(open(cache+'db.json').read())
 except:
 	db=dict()
 
 tn=time()
-for w in listdir(home+'/vkfeed/'):
+for w in listdir(cache):
 	w=w.split('.')
 	try:
 		if int(w[1])<tn-3600*24*7:
-			remove(home+'/vkfeed/'+'.'.join(w))
+			remove(cache+'.'.join(w))
 	except:
 		pass
 
@@ -218,7 +219,7 @@ def makepage(keys):
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
-		global home,repo
+		global cache,repo
 		self.send_response(200)
 		path=self.path
 		path,arg=(path.split('?',1)+[''])[:2]
@@ -227,7 +228,7 @@ class MyServer(BaseHTTPRequestHandler):
 			path=path[1:]
 		if path=='':
 			try:
-				db=loads(open(home+'.vkfeed/db.json').read())
+				db=loads(open(cache+'db.json').read())
 			except:
 				db=dict()
 			self.send_header("Content-type", "text/html; charset=utf-8")
@@ -235,7 +236,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.wfile.write(open(repo+'feed.html','r').read().encode())
 		elif path=='json':
 			try:
-				db=loads(open(home+'.vkfeed/db.json').read())
+				db=loads(open(cache+'db.json').read())
 			except:
 				pass
 			self.send_header("Content-type", "text/html; charset=utf-8")
@@ -255,7 +256,7 @@ class MyServer(BaseHTTPRequestHandler):
 		elif path[0] in '1234567890':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
-			self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
+			self.wfile.write(open(cache+path,'rb').read())
 		elif path[0] in 'qwertyuiopasdfghjklzxcvbnm':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
