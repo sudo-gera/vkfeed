@@ -27,6 +27,10 @@ from multiprocessing import Process
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
+try:
+	from shutil import disk_usage
+except:
+	from psutil import disk_usage
 
 home=str(Path.home())+'/'
 cache=home+'.vkfeed/'
@@ -175,6 +179,7 @@ def feed(start_=None):
 				while wifi()==0:
 					sleep(4)
 				sleep(0.3344554433)
+				cacheclear()
 				open(cache+name,'wb').write(urlopen(url).read())
 				w['photos'].append(name)
 	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
@@ -196,14 +201,10 @@ try:
 except:
 	db=dict()
 
-tn=time()
-for w in listdir(cache):
-	w=w.split('.')
-	try:
-		if int(w[1])<tn-3600*24*7:
-			remove(cache+'.'.join(w))
-	except:
-		pass
+def cacheclear():
+	global cache
+	while disk_usage(cache).free<1024**3:
+		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 
 proc=Process(target=manager)
 token()
