@@ -7,7 +7,8 @@
 			background-color: #13002f;
 			overflow-wrap: anywhere;
 			text-align: center;
-			border-radius: 8px;
+			border-radius: 32px;
+			margin: 16px;
 		}
 		body {
 			background-color: #160057;
@@ -143,7 +144,7 @@
 			for (photo of q.photos){
 				text+='<img src='+photo+' width="100%"><br>'
 			}
-			text+='\n<h6><form action="https://vk.com/wall'+q.orig+'"><input type="submit" value="original" /></form></h6><br></div>\n'
+			text+='\n<h3><form action="https://vk.com/wall'+q.orig+'"><input type="submit" value="original" /></form></h3><br></div>\n'
 			return text
 		}
 
