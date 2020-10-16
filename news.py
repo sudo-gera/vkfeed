@@ -252,14 +252,11 @@ class MyServer(BaseHTTPRequestHandler):
 			keys=dumps(keys)
 			loads(keys)
 			self.wfile.write(keys.encode())
-		elif path[0].isdigit():
+		elif path[0] in '1234567890':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
-			try:
-				self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
-			except:
-				self.wfile.write(open(repo+'favicon.ico','rb').read())
-		else:
+			self.wfile.write(open(home+'.vkfeed/'+path,'rb').read())
+		elif path[0] in 'qwertyuiopasdfghjklzxcvbnm':
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
