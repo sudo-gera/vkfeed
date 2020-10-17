@@ -140,11 +140,11 @@
 */
 
 		function posttotext(q){
-			text='<div class=post id=_'+q.index+'><h3>'+q.public+'</h3><h5>'+q.text+'</h5><br>'
+			text='<div class=post id=_'+q.index+'><br><h3>'+q.public+'</h3><h5>'+q.text+'</h5><br>'
 			for (photo of q.photos){
 				text+='<img src='+photo+' width="100%"><br>'
 			}
-			text+='\n<h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img src=orig.png width="64px"></a></h3><br></div>\n'
+			text+='\n<br><h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img src=orig.png width="64px"></a></h3><br></div>\n'
 			return text
 		}
 
