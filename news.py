@@ -222,9 +222,6 @@ from urllib.parse import unquote as uqu
 import os
 
 
-def makepage(keys):
-	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
-
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
 		global cache,repo
