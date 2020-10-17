@@ -7,12 +7,21 @@
 			background-color: #13002f;
 			overflow-wrap: anywhere;
 			text-align: center;
+<<<<<<< HEAD
 			border-radius: 128px;
 			margin: 24px;
+=======
+			border-radius: 64px;
+			margin: 16px;
+			padding-bottom: 16px;
+>>>>>>> 2252fd2c9a1d13286da42931e637fa4fe5805720
 		}
 		body {
 			background-color: #160057;
 			color: #FFFFFF;
+		}
+		.orig{
+			margin-top: 34px;
 		}
 	</style>
 	<script type="text/javascript">
@@ -144,7 +153,7 @@
 			for (photo of q.photos){
 				text+='<img src='+photo+' width="100%"><br>'
 			}
-			text+='\n<h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img height="64px" margin="32px" src=orig.png width="64px"></a></h3><h6><br></h6></div>\n'
+			text+='\n<div class="orig"><h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img height="64px" src=orig.png width="64px"></a></h3></div></div>\n'
 			return text
 		}
 
