@@ -183,12 +183,14 @@ def feed(start_=None):
 				sleep(0.3344554433)
 				cacheclear()
 				open(cache+name,'wb').write(urlopen(url).read())
-				w['photos'].append(name)
+				sm=check_output(['sum',cache+name]).decode()
+				w['photos'].append({'name':name,'sum':sm})
 	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
 	q=dict(q)
 	for w in q:
 		if [e for e in db.keys() if db[e]['orig']==q[w]['orig']]==[]:
-			db[w]=q[w]
+			if [e for e in db.keys() if db[e]['text']==q[w]['text'] and sorted([r['sum'] for r in db[e]['photos']]) == sorted([r['sum'] for r in db[e]['photos']])]==[]:
+				db[w]=q[w]
 		else:
 			next_=None
 	open(cache+'db.json','w').write(dumps(db))
@@ -243,7 +245,10 @@ class MyServer(BaseHTTPRequestHandler):
 			try:
 				db=loads(open(cache+'db.json').read())
 			except:
-				pass
+				try:
+					_db=db
+				except:
+					db=dict()
 			self.send_header("Content-type", "text/html; charset=utf-8")
 			self.end_headers()
 #			keys=list(db.keys())
@@ -252,6 +257,8 @@ class MyServer(BaseHTTPRequestHandler):
 #			keys='\n'.join(keys)
 			keys=[{'date':w,**db[w]} for w in sorted(list(db.keys()))]
 			keys=[w for w in keys if w['text'] or w['photos']]
+			for w in keys:
+				w['photos']=[e['name'] for e in w['photos']]
 			keys=keys[::-1]
 			if len(keys)==0:
 				keys.append({'date':'0.0.0','public':'vkfeed','text':'creating cache...\n wait 10 mintes and refresh','orig':'0_0','photos':[]})
