@@ -32,4 +32,4 @@ try:
 except:
 	print('installation failed. turn on mobile data and wifi hotspot and try again')
 run(['ln','-s',path+'news.py',home+'../usr/bin/vkfeed'])
-print('installation complete. now you can run vkfeed command')
+print('installation complete. now you can run \x1b[32mvkfeed\x1b[0m command')
