@@ -38,7 +38,15 @@ cache=home+'.vkfeed/'
 def error():
 	q=format_exc()
 	q=q.split('\n')
-	q='line'+q[-4].split('line',1)[1]+', '+q[-2]
+	f=q[1:-2]
+	d=[]
+	while f:
+		d.append(f[:2])
+		f=f[2:]
+	d=d+[w for w in d if w[0].split('"')[1].split('/')[-1]=='vkfeed']
+	d=d[-1]
+	d='line'+d[0].split('line',1)[1]
+	q=d+', '+q[-2]
 	print(q)
 
 try:
