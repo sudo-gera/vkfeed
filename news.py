@@ -11,7 +11,7 @@ from urllib.parse import quote
 from time import sleep
 from time import time
 from time import asctime
-from traceback import format_exc as error
+from traceback import format_exc
 from os.path import exists
 from os import mkdir
 from os import popen
@@ -34,6 +34,12 @@ except:
 
 home=str(Path.home())+'/'
 cache=home+'.vkfeed/'
+
+def error():
+	q=format_exc()
+	q=q.split('\n')
+	q='line'+q[-4].split('line',1)[1]+', '+q[-2]
+	print(q)
 
 try:
 	repo=open(cache+'path').read()
@@ -131,12 +137,12 @@ def manager():
 				d=feed()
 				neew_new=0
 			except:
-				print(error())
+				error()
 		else:
 			try:
 				d=feed(d)
 			except:
-				print(error())
+				error()
 	
 def feed(start_=None):
 	global db
@@ -158,7 +164,7 @@ def feed(start_=None):
 				d=d['first_name']+' '+d['last_name']
 				w['source_name']=d
 		except:
-			print(error())
+			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	try:
 		next_=q['next_from']
