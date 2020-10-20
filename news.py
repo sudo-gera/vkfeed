@@ -112,7 +112,9 @@ def wifi():
 	except:
 		if wifi_er==0:
 			print('unable to check if internet is over wifi or mobile data, try to run\npkg install termux-api')
-#			wifi_er=1
+			wifi_er=10
+		else:
+			wifi_er-=1
 		return 1
 
 def manager():
@@ -201,9 +203,14 @@ try:
 except:
 	db=dict()
 
+cachecleared=0
 def cacheclear():
-	global cache
-	while disk_usage(cache).free<1024**3:
+	global cache,cachecleared
+	if cachecleared:
+		cachecleared-=1
+		return
+	cachecleared=10
+	while disk_usage(cache).free<2*1024**3:
 		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 
 proc=Process(target=manager)
@@ -214,9 +221,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
 import os
 
-
-def makepage(keys):
-	return ['<!--'+w+'--><div class=post><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="1000vw"><br>' for e in db[w]['photos']])+'</div>\n' for w in keys]
 
 class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
