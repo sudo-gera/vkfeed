@@ -77,11 +77,11 @@
 		shownposts=[]
 		body=0
 		start=0
-		postsinpage=8
-		scrolledto=0
+		postsinpage=32
+		scrpix=0
 
 		function onscroll(){
-			//setCookie('y',Math.round(window.scrollY))
+			scrpix=Math.round(window.scrollY)
 			newposts=getoverpage()
 			if (newposts!=null){
 				newposts-=start
@@ -91,12 +91,12 @@
 						posts[i].posted=1
 					}
 				}
+				for (i=start;i<start+newposts&&i<posts.length;i++){
+//					document.getElementById('_'+i).parentNode.removeChild(document.getElementById('_'+i))
+				}
 				start+=newposts
 				if (start>posts.length){
 					start=posts.length
-				}
-				if (start>scrolledto){
-					scrolledto+=start
 				}
 				setCookie('start',posts[start].date)
 			}
@@ -126,7 +126,7 @@
 			if (fi-st==1){
 				return st
 			}
-			ce=(fi+st)/2
+			ce=Math.round((fi+st)/2)
 			if (document.getElementById('_'+ce).getBoundingClientRect().bottom<0){
 				return getoverpage(ce,fi)
 			}
@@ -177,7 +177,6 @@
 						}
 						i++
 					}
-					scrolledto=start
 					body.innerHTML=''
 					for (i=start;i<posts.length&&i<postsinpage+start;i++){
 						body.innerHTML+=posttotext(posts[i])
