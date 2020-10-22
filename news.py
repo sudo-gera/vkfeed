@@ -31,6 +31,7 @@ try:
 	from shutil import disk_usage
 except:
 	from psutil import disk_usage
+from pprint import pprint
 
 home=str(Path.home())+'/'
 cache=home+'.vkfeed/'
@@ -42,13 +43,14 @@ def error():
 		f=q[1:-2]
 		d=[]
 		while f:
-			d.append(f[:2])
+			d.append('\0'.join(f[:2]))
 			f=f[2:]
-		d=d+[w for w in d if w[0].split('"')[1].split('/')[-1]=='vkfeed']
+		pprint(d)
+		d=d+[w for w in d if argv[0] in w]
 		d=d[-1]
-		d='line'+d[0].split('line',1)[1]
+		d='line'+d.split('line',1)[1]
 		q=d+', '+q[-2]
-		print(q)
+		pprint(q)
 	except:
 		print(q,format_exc())
 
