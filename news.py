@@ -27,6 +27,7 @@ from multiprocessing import Process
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
+from difflib import ndiff
 try:
 	from shutil import disk_usage
 except:
@@ -206,13 +207,17 @@ def feed(start_=None):
 	q=dict(q)
 	for w in q:
 		if [e for e in db.keys() if db[e]['orig']==q[w]['orig']]==[]:
-			if [e for e in db.keys() if db[e]['text']==q[w]['text'] and sorted([r['sum'] for r in db[e]['photos']]) == sorted([r['sum'] for r in db[e]['photos']])]==[]:
+			if [e for e in db.keys() if textsame(db[e]['text'],q[w]['text']) and sorted([r['sum'] for r in db[e]['photos']]) == sorted([r['sum'] for r in db[e]['photos']])]==[]:
 				db[w]=q[w]
 		else:
 			next_=None
 	open(cache+'db.json','w').write(dumps(db))
 	print(asctime(),'some new posts are loaded')
 	return next_
+
+def textsame(q,w):
+	q=list(ndiff(q,w))
+	return len([w for w in q if w.startswith('  ')])*2>len(q)
 
 if not exists(cache):
 	mkdir(cache)
