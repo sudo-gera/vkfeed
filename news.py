@@ -39,7 +39,7 @@ def error():
 	q=format_exc()
 	try:
 		q=q.split('\n')
-		f=q[1:-2]
+		fq[[e for e,w in enumreate(q) if w.startswith('Traceback')][-1]+1:-2]
 		d=[]
 		while f:
 			d.append(f[:2])
