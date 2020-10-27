@@ -41,19 +41,18 @@ def error():
 	q=format_exc()
 	try:
 		q=q.split('\n')
-		fq[[e for e,w in enumreate(q) if w.startswith('Traceback')][-1]+1:-2]
+		f=q[[e for e,w in enumreate(q) if w.startswith('Traceback')][-1]+1:-2]
 		d=[]
 		while f:
 			d.append('\0'.join(f[:2]))
 			f=f[2:]
-		pprint(d)
 		d=d+[w for w in d if argv[0] in w]
 		d=d[-1]
 		d='line'+d.split('line',1)[1]
 		q=d+', '+q[-2]
-		pprint(q)
+		print(q)
 	except:
-		print(q,format_exc())
+		pprint(q,format_exc())
 
 try:
 	repo=open(cache+'path').read()
