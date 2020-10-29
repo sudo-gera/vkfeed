@@ -194,7 +194,10 @@ def feed(start_=None):
 				e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
 				a=0
 				for r in e['sizes']:
-					a=max(a,r['width'])
+					if r['width']<729:
+						a=max(a,r['width'])
+				if a==0:
+					a=e['sizes'][0]['width']
 				url=[r for r in e['sizes'] if r['width']==a][0]['url']
 				name=str(time())+'.'+url.split('/')[-1].split('?')[0]
 				while wifi()==0:
