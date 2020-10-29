@@ -41,7 +41,7 @@ def error():
 	q=format_exc()
 	try:
 		q=q.split('\n')
-		f=q[[e for e,w in enumreate(q) if w.startswith('Traceback')][-1]+1:-2]
+		f=q[[e for e,w in enumerate(q) if w.startswith('Traceback')][-1]+1:-2]
 		d=[]
 		while f:
 			d.append('\0'.join(f[:2]))
