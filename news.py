@@ -3,6 +3,7 @@ python3 $0 $@
 exit
 ':'''
 
+###############################################################################
 
 from urllib.request import urlopen
 from json import loads
@@ -28,14 +29,18 @@ from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
 from difflib import ndiff
+from multiprocessing import Lock
 try:
 	from shutil import disk_usage
 except:
 	from psutil import disk_usage
 from pprint import pprint
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import unquote as uqu
+import os
+from functools import partial
 
-home=str(Path.home())+'/'
-cache=home+'.vkfeed/'
+###############################################################################
 
 def error():
 	q=format_exc()
@@ -54,6 +59,10 @@ def error():
 	except:
 		pprint(q,format_exc())
 
+###############################################################################
+
+home=str(Path.home())+'/'
+cache=home+'.vkfeed/'
 try:
 	repo=open(cache+'path').read()
 except:
@@ -61,6 +70,40 @@ except:
 	if repo[-1]!='/':
 		repo+='/'
 	open(cache+'path','w').write(repo)
+
+###############################################################################
+
+one=Lock()
+
+def one_process(fun):
+	def run(*q,**w):
+		global one
+		one.acquire()
+		try:
+			d=loads(open(cache+'vars.json').read())
+		except:
+			d=dict()
+		r=fun(d,*q,**w)
+		open(cache+'vars.json','w').write(dumps(d))
+		one.release()
+		return r
+	return run
+
+###############################################################################
+
+@one_process
+def update_db(d,new_db=None):
+	if new_db == None:
+		try:
+			db=loads(open('db.json').read())
+		except:
+			db=[]
+	else:
+		db=new_db
+		open('db.json','w').write(dumps(db))
+	return db
+
+###############################################################################
 
 def token(check=0):
 	try:
@@ -76,12 +119,9 @@ def token(check=0):
 	url=input('now paste the url: ')
 	t=url.split('#')[1].split('&')[0].split('=')[1]
 	open(cache+'token','w').write(t)
+	return t
 
-
-neew_new=1
-wifi_de=64
-wifi_er=0
-wifi_en=wifi_de
+###############################################################################
 
 def items(q):
 	if type(q) == type(dict()):
@@ -114,53 +154,46 @@ def api(path,data=''):
 	except:
 		print(ret)
 
-def wifi():
-	global wifi_en,wifi_er,wifi_de
-	if wifi_er:
-		return 1
-	try:
-		if wifi_en<wifi_de:
-			wifi_en+=1
-			return 1
-		else:
+###############################################################################
+
+@one_process
+def wifi(d):
+	wifi_state=None
+	if 'wifi_not_check' in d:
+		wifi_not_check=d['wifi_not_check']
+		if wifi_not_check:
+			wifi_not_check-=1
+			wifi_state=True
+	if wifi_state==None:
+		wifi_not_check=128
+		try:
 			if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
-				wifi_en=0
-				return 1
+				wifi_state=True
 			else:
-				return 0
-	except:
-		if wifi_er==0:
-			print('unable to check if internet is over wifi or mobile data, try to run\npkg install termux-api')
-			wifi_er=10
-		else:
-			wifi_er-=1
-		return 1
+				wifi_state=False
+		except:
+			print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
+			wifi_state=True
+	d['wifi_not_check']=wifi_not_check
+	return wifi_state
+
+###############################################################################
 
 def manager():
-	d=None
-	global neew_new
-	try:
-		if neew_new:
-			pass
-	except:
-		neew_new=1
+	start_=None
 	while 1:
-		if neew_new:
+		try:
+			sleep(0.3344554433)
+			q=api('newsfeed.get?filters=post&max_photos=100&count=4'+('&start_from='+start_ if start_ else ''))
 			try:
-				d=feed()
-				neew_new=0
+				start_=q['next_from']
 			except:
-				error()
-		else:
-			try:
-				d=feed(d)
-			except:
-				error()
-	
-def feed(start_=None):
-	global db
-	sleep(0.3333334)
-	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
+				start_=None
+			feed(q)
+		except:
+			error()
+
+def feed(q):
 	for w in q['items']:
 		if 'text' not in w:
 			w['text']=''
@@ -179,129 +212,117 @@ def feed(start_=None):
 		except:
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
-	try:
-		next_=q['next_from']
-	except:
-		next_=None
 	q=q['items']
 	for w in q:
-		w['photos']=[]
-		if 'attachments' not in w:
-			w['attachments']=[]
-		for e in w['attachments']:
-			if e['type']=='photo':
-				e=e['photo']
-				e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
-				a=0
-				for r in e['sizes']:
-					if r['width']<729:
-						a=max(a,r['width'])
-				if a==0:
-					a=e['sizes'][0]['width']
-				url=[r for r in e['sizes'] if r['width']==a][0]['url']
-				name=str(time())+'.'+url.split('/')[-1].split('?')[0]
-				while wifi()==0:
-					sleep(4)
-				sleep(0.3344554433)
-				cacheclear()
-				open(cache+name,'wb').write(urlopen(url).read())
-				sm=check_output(['sum',cache+name]).decode()
-				w['photos'].append({'name':name,'sum':sm})
-	q=[[str(w['date'])+'.'+str(time()),{'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}] for w in q]
-	q=dict(q)
-	for w in q:
-		if [e for e in db.keys() if db[e]['orig']==q[w]['orig']]==[]:
-			if [e for e in db.keys() if textsame(db[e]['text'],q[w]['text']) and sorted([r['sum'] for r in db[e]['photos']]) == sorted([r['sum'] for r in db[e]['photos']])]==[]:
-				db[w]=q[w]
-		else:
-			next_=None
-	open(cache+'db.json','w').write(dumps(db))
-	print(asctime(),'some new posts are loaded')
-	return next_
+		procs.append(Process(target=postworker,args=(w,)).start())
+
+def postworker(w):
+	w['photos']=[]
+	if 'attachments' not in w:
+		w['attachments']=[]
+	for e in w['attachments']:
+		if e['type']=='photo':
+			e=e['photo']
+			e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
+			a=0
+			for r in e['sizes']:
+				if r['width']<420:
+					a=max(a,r['width'])
+			if a==0:
+				a=e['sizes'][0]['width']
+			size=[r for r in e['sizes'] if r['width']==a][0]
+			url=size['url']
+			size=[size['width'],size['height']]
+			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
+			while wifi()==0:
+				sleep(4)
+			cacheclear()
+			open(cache+name,'wb').write(urlopen(url).read())
+			sm=check_output(['sum',cache+name]).decode()
+			w['photos'].append({'name':name,'sum':sm,'size':size})
+	w={'date':str(w['date'])+'.'+str(time()),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
+	db=update_db()
+	if [e for e in db if e['orig']==w['orig']]==[]:
+		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
+			if w['text'] or w['photos']:
+				db.append(w)
+	else:
+		next_=None
+	update_db(db)
+
+@one_process
+def cacheclear(d):
+	global cache
+	if 'cache_recently_cleared' in d:
+		cache_recently_cleared=d['cache_recently_cleared']
+	else:
+		cache_recently_cleared=0
+	if cache_recently_cleared:
+		cache_recently_cleared-=1
+		return
+	cache_recently_cleared=128
+	while disk_usage(cache).free<2*1024**3:
+		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
+	d['cache_recently_cleared']=cache_recently_cleared
 
 def textsame(q,w):
 	q=list(ndiff(q,w))
 	return len([w for w in q if w.startswith('  ')])*2>len(q)
-
-if not exists(cache):
-	mkdir(cache)
-
-try:
-	db=loads(open(cache+'db.json').read())
-except:
-	db=dict()
-
-cachecleared=0
-def cacheclear():
-	global cache,cachecleared
-	if cachecleared:
-		cachecleared-=1
-		return
-	cachecleared=10
-	while disk_usage(cache).free<2*1024**3:
-		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
-
-proc=Process(target=manager)
-token()
-proc.start()
-
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import unquote as uqu
-import os
-
+	
+###############################################################################
 
 class MyServer(BaseHTTPRequestHandler):
+	def log_message(*a):
+		pass
 	def do_GET(self):
 		global cache,repo
-		self.send_response(200)
 		path=self.path
-		path,arg=(path.split('?',1)+[''])[:2]
 		path=uqu(path)
 		if path[0]=='/':
 			path=path[1:]
 		if path=='':
-			try:
-				db=loads(open(cache+'db.json').read())
-			except:
-				db=dict()
-			self.send_header("Content-type", "text/html; charset=utf-8")
+			path='feed.html'
+			self.send_response(200)
+			self.send_header("Content-type", "text/html")
 			self.end_headers()
-			self.wfile.write(open(repo+'feed.html','r').read().encode())
-		elif path=='json':
-			try:
-				db=loads(open(cache+'db.json').read())
-			except:
-				try:
-					_db=db
-				except:
-					db=dict()
-			self.send_header("Content-type", "text/html; charset=utf-8")
+			self.wfile.write(open(path,'rb').read())
+		if path=='json':
+			db=update_db()
+			self.send_response(200)
+			self.send_header("Content-type", "text/json; charset=utf-8")
 			self.end_headers()
-#			keys=list(db.keys())
-#			keys=sorted(keys)[::-1]
-#			keys=['<!--'+w+'--><div class=post id='+w+'><h3>'+db[w]['public']+'</h3><h6>'+'<a target="_blank" href=https://vk.com/wall'+db[w]['orig']+'>original</a></h6><h5>'+db[w]['text']+'</h5><br>'+''.join(['<img src='+e+' width="100%"><br>' for e in db[w]['photos']])+'</div>' for w in keys]
-#			keys='\n'.join(keys)
-			keys=[{'date':w,**db[w]} for w in sorted(list(db.keys()))]
-			keys=[w for w in keys if w['text'] or w['photos']]
+			keys=db[:]
+			keys.sort(key=lambda f:f['date'])
 			for w in keys:
 				w['photos']=[e['name'] for e in w['photos']]
 			keys=keys[::-1]
 			if len(keys)==0:
 				keys.append({'date':'0.0.0','public':'vkfeed','text':'creating cache...\n wait 10 mintes and refresh','orig':'0_0','photos':[]})
 			keys=dumps(keys)
-			loads(keys)
 			self.wfile.write(keys.encode())
-		elif path[0] in '1234567890' and '/' not in path:
-			self.send_header("Content-type", "file/file")
-			self.end_headers()
-			self.wfile.write(open(cache+path,'rb').read())
-		elif path[0] in 'qwertyuiopasdfghjklzxcvbnm' and '/' not in path:
-			self.send_header("Content-type", "file/file")
-			self.end_headers()
-			self.wfile.write(open(repo+path,'rb').read())
-	def log_message(*a):
-		pass
+		elif '/' not in path:
+			if path[0] in '1234567890' and '/' not in path:
+				path=cache+path
+			elif path[0] in 'qwertyuiopasdfghjklzxcvbnm' and '/' not in path:
+				path=repo+path
+			try:
+				self.send_response(200)
+				self.send_header("Content-type", "file/file")
+				self.end_headers()
+				self.wfile.write(open(path,'rb').read())
+			except:
+				self.send_response(404)
+				self.send_header("Content-type", "file/file")
+				self.end_headers()
 
+###############################################################################
+
+if not exists(cache):
+	mkdir(cache)
+procs=[]
+proc=Process(target=manager)
+token()
+proc.start()
 
 hostPort = 9876
 
@@ -313,10 +334,11 @@ while st:
  except:
   hostPort+=1
 
+print("http://127.0.0.1:%s" % (hostPort))
 try:
 	run(["termux-open-url","http://127.0.0.1:%s" % (hostPort)])
 except:
-	print("http://127.0.0.1:%s" % (hostPort))
+	pass
 
 try:
     myServer.serve_forever()
@@ -324,5 +346,7 @@ except KeyboardInterrupt:
     pass
 
 proc.terminate()
+for w in procs:
+	w.terminate()
 myServer.server_close()
 print()
