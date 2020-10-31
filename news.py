@@ -29,7 +29,6 @@ from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
 from difflib import ndiff
-from multiprocessing import Lock
 try:
 	from shutil import disk_usage
 except:
@@ -38,6 +37,8 @@ from pprint import pprint
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
 import os
+from os.path import exists
+from os import remove
 from functools import partial
 
 ###############################################################################
@@ -73,19 +74,19 @@ except:
 
 ###############################################################################
 
-one=Lock()
-
 def one_process(fun):
 	def run(*q,**w):
 		global one
-		one.acquire()
+		while exists(cache+'lock'):
+			sleep(0.01)
+		open(cache+'lock','w').write('')
 		try:
 			d=loads(open(cache+'vars.json').read())
 		except:
 			d=dict()
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
-		one.release()
+		remove(cache+'lock')
 		return r
 	return run
 
