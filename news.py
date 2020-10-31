@@ -57,7 +57,7 @@ def error():
 			f=f[2:]
 		d=d+[w for w in d if argv[0] in w]
 		d=d[-1]
-		d='line'+d.split('line',1)[1]
+		d='line'+d.split('line',1)[1].split('\n')[0]
 		q=d+', '+q[-2]
 		print(q)
 	except:
