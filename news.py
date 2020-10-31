@@ -29,10 +29,6 @@ from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
 from difflib import ndiff
-<<<<<<< HEAD
-=======
-from multiprocessing import Queue
->>>>>>> 34ca6f7cbfacb04fb8afaccc93b20cc1e315d3ab
 try:
 	from shutil import disk_usage
 except:
@@ -78,14 +74,6 @@ except:
 
 ###############################################################################
 
-<<<<<<< HEAD
-def one_process(fun):
-	def run(*q,**w):
-		global one
-		while exists(cache+'lock'):
-			sleep(0.01)
-		open(cache+'lock','w').write('')
-=======
 os._a_a_=[]
 
 def one_process(fun):
@@ -94,18 +82,13 @@ def one_process(fun):
 		os._a_a_.append(pid)
 		while os._a_a_[0]!=pid:
 			sleep(0.01)
->>>>>>> 34ca6f7cbfacb04fb8afaccc93b20cc1e315d3ab
 		try:
 			d=loads(open(cache+'vars.json').read())
 		except:
 			d=dict()
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
-<<<<<<< HEAD
-		remove(cache+'lock')
-=======
 		os._a_a_=os._a_a_[1:]
->>>>>>> 34ca6f7cbfacb04fb8afaccc93b20cc1e315d3ab
 		return r
 	return run
 
