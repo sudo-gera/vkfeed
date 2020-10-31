@@ -46,14 +46,6 @@ from functools import partial
 
 ###############################################################################
 
-@err
-def urlopen(*q,**w):
-	while not wifi():
-		sleep(4)
-	return urlop(*q,**w)	
-
-###############################################################################
-
 def error():
 	q=format_exc()
 	try:
@@ -70,6 +62,24 @@ def error():
 		print(q)
 	except:
 		pprint(q,format_exc())
+
+###############################################################################
+
+def err(func):
+	def run(*q,**w):
+		try:
+			func(*q,**w)
+		except:
+			error()
+	return run
+
+###############################################################################
+
+@err
+def urlopen(*q,**w):
+	while not wifi():
+		sleep(4)
+	return urlop(*q,**w)	
 
 ###############################################################################
 
@@ -195,16 +205,6 @@ def wifi(d):
 			wifi_state=True
 	d['wifi_not_check']=wifi_not_check
 	return wifi_state
-
-###############################################################################
-
-def err(func):
-	def run(*q,**w):
-		try:
-			func(*q,**w)
-		except:
-			error()
-	return run
 
 ###############################################################################
 
