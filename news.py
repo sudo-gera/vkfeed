@@ -229,7 +229,7 @@ def postworker(w):
 			e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
 			a=0
 			for r in e['sizes']:
-				if r['width']<420:
+				if r['width']<729:
 					a=max(a,r['width'])
 			if a==0:
 				a=e['sizes'][0]['width']
