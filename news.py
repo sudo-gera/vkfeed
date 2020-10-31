@@ -46,6 +46,7 @@ from functools import partial
 
 ###############################################################################
 
+@err
 def urlopen(*q,**w):
 	while not wifi():
 		sleep(4)
@@ -104,6 +105,7 @@ def one_process(fun):
 
 ###############################################################################
 
+@err
 @one_process
 def update_db(d,new_db=None):
 	if new_db == None:
@@ -118,6 +120,7 @@ def update_db(d,new_db=None):
 
 ###############################################################################
 
+@err
 def token(check=0):
 	try:
 		return open(cache+'token').read()
@@ -136,6 +139,7 @@ def token(check=0):
 
 ###############################################################################
 
+@err
 def items(q):
 	if type(q) == type(dict()):
 		if set(q.keys()) == set(['count', 'items']):
@@ -149,6 +153,7 @@ def items(q):
 	else:
 		return q
 
+@err
 def api(path,data=''):
 	if path and path[-1] not in '&?':
 		if '?' in path:
@@ -169,6 +174,7 @@ def api(path,data=''):
 
 ###############################################################################
 
+@err
 @one_process
 def wifi(d):
 	wifi_state=None
@@ -192,6 +198,17 @@ def wifi(d):
 
 ###############################################################################
 
+def err(func):
+	def run(*q,**w):
+		try:
+			func(*q,**w)
+		except:
+			error()
+	return run
+
+###############################################################################
+
+@err
 def manager():
 	start_=None
 	while 1:
@@ -206,6 +223,7 @@ def manager():
 		except:
 			error()
 
+@err
 def feed(q):
 	for w in q['items']:
 		if 'text' not in w:
@@ -229,6 +247,7 @@ def feed(q):
 	for w in q:
 		procs.append(Process(target=postworker,args=(w,)).start())
 
+@err
 def postworker(w):
 	w['photos']=[]
 	if 'attachments' not in w:
@@ -261,6 +280,7 @@ def postworker(w):
 		next_=None
 	update_db(db)
 
+@err
 @one_process
 def cacheclear(d):
 	global cache
@@ -276,6 +296,7 @@ def cacheclear(d):
 		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 	d['cache_recently_cleared']=cache_recently_cleared
 
+@err
 def textsame(q,w):
 	q=list(ndiff(q,w))
 	return len([w for w in q if w.startswith('  ')])*2>len(q)
@@ -283,8 +304,10 @@ def textsame(q,w):
 ###############################################################################
 
 class MyServer(BaseHTTPRequestHandler):
+	@err
 	def log_message(*a):
 		pass
+	@err
 	def do_GET(self):
 		global cache,repo
 		path=self.path
