@@ -1,4 +1,5 @@
 ''':'
+echo -en "loading...\r"
 apt update -yqqq
 apt install python -yqqq
 python3 $0 $@
