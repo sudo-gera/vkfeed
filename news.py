@@ -29,7 +29,7 @@ from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
 from difflib import ndiff
-from multiprocessing import Lock
+from multiprocessing import Queue
 try:
 	from shutil import disk_usage
 except:
@@ -73,19 +73,21 @@ except:
 
 ###############################################################################
 
-one=Lock()
+os._a_a_=[]
 
 def one_process(fun):
 	def run(*q,**w):
-		global one
-		one.acquire()
+		pid=os.getpid()
+		os._a_a_.append(pid)
+		while os._a_a_[0]!=pid:
+			sleep(0.01)
 		try:
 			d=loads(open(cache+'vars.json').read())
 		except:
 			d=dict()
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
-		one.release()
+		os._a_a_=os._a_a_[1:]
 		return r
 	return run
 
@@ -95,12 +97,12 @@ def one_process(fun):
 def update_db(d,new_db=None):
 	if new_db == None:
 		try:
-			db=loads(open('db.json').read())
+			db=loads(open(cache+'db.json').read())
 		except:
 			db=[]
 	else:
 		db=new_db
-		open('db.json','w').write(dumps(db))
+		open(cache+'db.json','w').write(dumps(db))
 	return db
 
 ###############################################################################
