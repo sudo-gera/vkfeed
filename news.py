@@ -29,7 +29,6 @@ from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
 from difflib import ndiff
-from multiprocessing import Queue
 try:
 	from shutil import disk_usage
 except:
@@ -38,6 +37,8 @@ from pprint import pprint
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
 import os
+from os.path import exists
+from os import remove
 from functools import partial
 
 ###############################################################################
