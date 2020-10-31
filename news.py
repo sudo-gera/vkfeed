@@ -296,7 +296,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.send_response(200)
 			self.send_header("Content-type", "text/html")
 			self.end_headers()
-			self.wfile.write(open(path,'rb').read())
+			self.wfile.write(open(repo+path,'rb').read())
 		if path=='json':
 			db=update_db()
 			self.send_response(200)
