@@ -68,7 +68,7 @@ def error():
 def err(func):
 	def run(*q,**w):
 		try:
-			func(*q,**w)
+			return func(*q,**w)
 		except:
 			error()
 	return run
@@ -131,17 +131,17 @@ def update_db(d,new_db=None):
 ###############################################################################
 
 @err
-def token(check=0):
+def token():
 	try:
 		return open(cache+'token').read()
 	except:
-		if check:
-			return
+		pass
 	input('welcome to vkfeed. you will be redirected to the authorization page, where you need to grant all the permissions required for the application to work. After that, you should copy the url of the page and paste it there.\nPress enter to open the page...')
 	try:
 		run(['termux-open-url','https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1'])
 	except:
-		print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
+		pass
+	print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
 	url=input('now paste the url: ')
 	t=url.split('#')[1].split('&')[0].split('=')[1]
 	open(cache+'token','w').write(t)
