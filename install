@@ -35,7 +35,7 @@ except:
 chdir(path)
 run(['git','pull','--no-edit','-q'])
 try:
-	run(['ln','-s',path+'news.py',home+'../usr/bin/vkfeed'])
+	run(['ln','-s',path+'news.py',home+'../usr/bin/vkfeed'],stderr='PIPE')
 except:
 	pass
 print('installation complete. now you can run \x1b[32mvkfeed\x1b[0m command')
