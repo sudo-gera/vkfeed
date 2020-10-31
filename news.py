@@ -5,7 +5,7 @@ exit
 
 ###############################################################################
 
-from urllib.request import urlopen
+from urllib.request import urlopen as urlop
 from json import loads
 from json import dumps
 from urllib.parse import quote
@@ -32,7 +32,10 @@ from difflib import ndiff
 try:
 	from shutil import disk_usage
 except:
-	from psutil import disk_usage
+	try:
+		from psutil import disk_usage
+	except:
+		from shutil import disk_usage
 from pprint import pprint
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
@@ -40,6 +43,13 @@ import os
 from os.path import exists
 from os import remove
 from functools import partial
+
+###############################################################################
+
+def urlopen(*q,**w):
+	while not wifi():
+		sleep(4)
+	return urlop(*q,**w)	
 
 ###############################################################################
 
@@ -237,8 +247,6 @@ def postworker(w):
 			url=size['url']
 			size=[size['width'],size['height']]
 			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
-			while wifi()==0:
-				sleep(4)
 			cacheclear()
 			open(cache+name,'wb').write(urlopen(url).read())
 			sm=check_output(['sum',cache+name]).decode()
