@@ -1,6 +1,6 @@
 ''':'
-apt update --force-yes -qqq
-apt install python --force-yes -qqq
+apt update -yqqq
+apt install python -yqqq
 python3 $0 $@
 exit
 ':'''
@@ -21,7 +21,7 @@ except:
 chdir(home+'.vkfeed')
 open_('path','w').write(path)
 try:
-	run(['apt','download','termux-api','--force-yes','-qqq'])
+	run(['apt','download','termux-api','-yqqq'])
 except:
 	print('installation failed. check internet connection. if it does not help, turn on mobile data and wifi hotspot and try again')
 termux=listdir('.')
@@ -29,7 +29,7 @@ termux=[w for w in termux if w.endswith('.deb')]
 termux.sort(key=getmtime)
 termux=termux[-1]
 try:
-	run(['apt','install',abspath(termux),'--force-yes','-qqq'])
+	run(['apt','install',abspath(termux),'-yqqq'])
 except:
 	print('installation failed. turn on mobile data and wifi hotspot and try again')
 chdir(path)
