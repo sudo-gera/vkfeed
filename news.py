@@ -53,7 +53,7 @@ def error():
 		f=q[[e for e,w in enumerate(q) if w.startswith('Traceback')][-1]+1:-2]
 		d=[]
 		while f:
-			d.append('\0'.join(f[:2]))
+			d.append('\n'.join(f[:2]))
 			f=f[2:]
 		d=d+[w for w in d if argv[0] in w]
 		d=d[-1]
