@@ -320,7 +320,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.send_header("Content-type", "text/html")
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
-		if path=='json':
+		elif path=='json':
 			db=update_db()
 			self.send_response(200)
 			self.send_header("Content-type", "text/json; charset=utf-8")
