@@ -218,6 +218,14 @@ def wifi(d):
 ###############################################################################
 
 @err
+def process(p,a=()):
+	d=Process(target=p,args=a)
+	d.start()
+	procs.append(d)
+
+###############################################################################
+
+@err
 def manager():
 	start_=None
 	while 1:
@@ -254,7 +262,7 @@ def feed(q):
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
 	for w in q:
-		procs.append(Process(target=postworker,args=(w,)).start())
+		process(postworker,(w,))
 
 @err
 def postworker(w):
@@ -363,11 +371,9 @@ class MyServer(BaseHTTPRequestHandler):
 if not exists(cache):
 	mkdir(cache)
 token()
-procs=[0,0]
-procs[0]=Process(target=manager)
-procs[0].start()
-procs[1]=Process(target=monitor)
-procs[1].start()
+procs=[]
+process(manager)
+process(monitor)
 
 hostPort = 9876
 
