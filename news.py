@@ -97,9 +97,14 @@ except:
 
 def one_process(fun):
 	def run(*q,**w):
-		while exists(cache+'lock'):
+		pid=os.getpid()
+		while 1:
+			while exists(cache+'lock'):
+				sleep(0.01)
+			open(cache+'lock','w').write(str(pid))
 			sleep(0.01)
-		open(cache+'lock','w')
+			if open(cache+'lock').read()==pid:
+				break
 		try:
 			d=loads(open(cache+'vars.json').read())
 		except:
