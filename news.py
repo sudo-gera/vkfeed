@@ -95,21 +95,18 @@ except:
 
 ###############################################################################
 
-os._a_a_=[]
-
 def one_process(fun):
 	def run(*q,**w):
-		pid=os.getpid()
-		os._a_a_.append(pid)
-		while os._a_a_[0]!=pid:
+		while exists(cache+'lock'):
 			sleep(0.01)
+		open(cache+'lock','w')
 		try:
 			d=loads(open(cache+'vars.json').read())
 		except:
 			d=dict()
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
-		os._a_a_=os._a_a_[1:]
+		remove(cache+'lock')
 		return r
 	return run
 
