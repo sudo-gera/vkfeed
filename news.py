@@ -97,11 +97,11 @@ except:
 
 def one_process(fun):
 	def run(*q,**w):
-		pid=os.getpid()
+		pid=str(os.getpid())
 		while 1:
 			while exists(cache+'lock'):
 				sleep(0.01)
-			open(cache+'lock','w').write(str(pid))
+			open(cache+'lock','w').write(pid)
 			sleep(0.01)
 			if open(cache+'lock').read()==pid:
 				break
