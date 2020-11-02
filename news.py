@@ -200,6 +200,7 @@ def wifi(d):
 				wifi_state=True
 			else:
 				wifi_state=False
+				wifi_not_check=0
 		except:
 			print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
 			wifi_state=True
