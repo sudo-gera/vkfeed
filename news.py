@@ -195,7 +195,7 @@ def api(path,data=''):
 def monitor():
 	while 1:
 		print(asctime(),len(get_db()),'posts in cache')
-	sleep(128)
+		sleep(128)
 
 ###############################################################################
 
@@ -243,7 +243,7 @@ def manager():
 				start_=q['next_from']
 			except:
 				start_=None
-			feed(q)
+			process(feed,(q,))
 		except:
 			error()
 
