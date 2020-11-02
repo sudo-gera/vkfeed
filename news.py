@@ -126,12 +126,12 @@ def get_db(d):
 
 @err
 @one_process
-def append_db(d,a):
+def add_db(d,a):
 	try:
 		db=loads(open(cache+'db.json').read())
 	except:
 		db=[]
-	db+=a
+	db+=[a]
 	open(cache+'db.json','w').write(dumps(db))
 	return db
 
@@ -300,7 +300,7 @@ def postworker(w):
 	if [e for e in db if e['orig']==w['orig']]==[]:
 		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
 			if w['text'] or w['photos']:
-				append_db(w)
+				add_db(w)
 	else:
 		next_=None
 
