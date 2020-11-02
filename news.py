@@ -296,7 +296,6 @@ def postworker(w):
 			w['photos'].append({'name':name,'sum':sm,'size':size})
 	w={'date':str(w['date'])+'.'+str(time()),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 	db=get_db()
-	print(db)
 	if [e for e in db if e['orig']==w['orig']]==[]:
 		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
 			if w['text'] or w['photos']:
