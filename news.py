@@ -117,15 +117,22 @@ def one_process(fun):
 
 @err
 @one_process
-def update_db(d,new_db=None):
-	if new_db == None:
-		try:
-			db=loads(open(cache+'db.json').read())
-		except:
-			db=[]
-	else:
-		db=new_db
-		open(cache+'db.json','w').write(dumps(db))
+def get_db(d):
+	try:
+		db=loads(open(cache+'db.json').read())
+	except:
+		db=[]
+	return db
+
+@err
+@one_process
+def append_db(d,a):
+	try:
+		db=loads(open(cache+'db.json').read())
+	except:
+		db=[]
+	db+=a
+	open(cache+'db.json','w').write(dumps(db))
 	return db
 
 ###############################################################################
@@ -187,7 +194,7 @@ def api(path,data=''):
 @err
 def monitor():
 	while 1:
-		print(asctime(),len(update_db()),'posts in cache')
+		print(asctime(),len(get_db()),'posts in cache')
 	sleep(128)
 
 ###############################################################################
@@ -288,14 +295,12 @@ def postworker(w):
 			sm=check_output(['sum',cache+name]).decode()
 			w['photos'].append({'name':name,'sum':sm,'size':size})
 	w={'date':str(w['date'])+'.'+str(time()),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	db=update_db()
 	if [e for e in db if e['orig']==w['orig']]==[]:
 		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
 			if w['text'] or w['photos']:
-				db.append(w)
+				append_db(w)
 	else:
 		next_=None
-	update_db(db)
 
 @err
 @one_process
@@ -338,7 +343,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
 		elif path=='json':
-			db=update_db()
+			db=get_db()
 			self.send_response(200)
 			self.send_header("Content-type", "text/json; charset=utf-8")
 			self.end_headers()
