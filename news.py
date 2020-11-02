@@ -185,6 +185,14 @@ def api(path,data=''):
 ###############################################################################
 
 @err
+def monitor():
+	while 1:
+		print(asctime(),len(update_db()),'posts in cache')
+	sleep(128)
+
+###############################################################################
+
+@err
 @one_process
 def wifi(d):
 	wifi_state=None
@@ -354,10 +362,12 @@ class MyServer(BaseHTTPRequestHandler):
 
 if not exists(cache):
 	mkdir(cache)
-procs=[]
-proc=Process(target=manager)
 token()
-proc.start()
+procs=[0,0]
+procs[0]=Process(target=manager)
+procs[0].start()
+procs[1]=Process(target=monitor)
+procs[1].start()
 
 hostPort = 9876
 
@@ -380,7 +390,6 @@ try:
 except KeyboardInterrupt:
     pass
 
-proc.terminate()
 for w in procs:
 	w.terminate()
 myServer.server_close()
