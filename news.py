@@ -378,10 +378,16 @@ class MyServer(BaseHTTPRequestHandler):
 
 if not exists(cache):
 	mkdir(cache)
+
 token()
 procs=[]
 process(manager)
 process(monitor)
+
+try:
+	remove(cache+'lock')
+except:
+	pass
 
 hostPort = 9876
 
