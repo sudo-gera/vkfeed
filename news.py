@@ -111,7 +111,7 @@ def one_process(fun):
 			d=dict()
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
-		remove(cache+'lock')
+		err(remove)(cache+'lock')
 		return r
 	return run
 
