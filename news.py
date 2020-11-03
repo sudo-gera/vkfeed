@@ -104,7 +104,7 @@ def one_process(fun):
 		pid=str(os.getpid())
 		while 1:
 			while exists(cache+'lock'):
-				sleep(0.001/p)
+				sleep(0.01/p)
 			open(cache+'lock','w').write(pid)
 			sleep(0.01/p)
 			if open(cache+'lock').read()==pid:
