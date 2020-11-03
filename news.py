@@ -97,12 +97,16 @@ except:
 
 def one_process(fun):
 	def run(*q,**w):
+		if 'p' not in w.keys():
+			p=1
+		else:
+			p=w['p']
 		pid=str(os.getpid())
 		while 1:
 			while exists(cache+'lock'):
-				sleep(0.01)
+				sleep(0.001/p)
 			open(cache+'lock','w').write(pid)
-			sleep(0.01)
+			sleep(0.01/p)
 			if open(cache+'lock').read()==pid:
 				break
 		try:
@@ -346,7 +350,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
 		elif path=='json':
-			db=get_db()
+			db=get_db(p=10)
 			self.send_response(200)
 			self.send_header("Content-type", "text/json; charset=utf-8")
 			self.end_headers()
