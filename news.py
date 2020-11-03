@@ -77,9 +77,9 @@ def err(func):
 
 @err
 def urlopen(*q,**w):
-	while not wifi():
+	while not get_wifi():
 		sleep(4)
-	return urlop(*q,**w)	
+	return urlop(*q,**w)
 
 ###############################################################################
 
@@ -207,27 +207,22 @@ def monitor():
 ###############################################################################
 
 @err
-@one_process
-def wifi(d):
-	wifi_state=None
-	if 'wifi_not_check' in d:
-		wifi_not_check=d['wifi_not_check']
-		if wifi_not_check:
-			wifi_not_check-=1
-			wifi_state=True
-	if wifi_state==None:
-		wifi_not_check=128
+def wifi():
+	while 1:
 		try:
 			if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
-				wifi_state=True
+				wifi_c=1
 			else:
-				wifi_state=False
-				wifi_not_check=0
+				wifi_c=0
 		except:
 			print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
-			wifi_state=True
-	d['wifi_not_check']=wifi_not_check
-	return wifi_state
+			wifi_c=1
+		open(cache+'wifi','w').write('+'*wifi_c)
+		sleep(128)
+
+@err
+def get_wifi():
+	return open(cache+'wifi').read()
 
 ###############################################################################
 
@@ -388,6 +383,7 @@ token()
 procs=[]
 process(manager)
 process(monitor)
+process(wifi)
 
 try:
 	remove(cache+'lock')
