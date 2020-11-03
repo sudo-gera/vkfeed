@@ -113,6 +113,7 @@ def one_process(fun):
 			d=loads(open(cache+'vars.json').read())
 		except:
 			d=dict()
+		del(w['p'])
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
 		err(remove)(cache+'lock')
