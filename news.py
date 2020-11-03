@@ -101,6 +101,7 @@ def one_process(fun):
 			p=1
 		else:
 			p=w['p']
+			del(w['p'])
 		pid=str(os.getpid())
 		while 1:
 			while exists(cache+'lock'):
@@ -113,7 +114,6 @@ def one_process(fun):
 			d=loads(open(cache+'vars.json').read())
 		except:
 			d=dict()
-		del(w['p'])
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
 		err(remove)(cache+'lock')
