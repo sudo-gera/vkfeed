@@ -25,7 +25,6 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
-from psutil import Process as pprocess
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
@@ -45,6 +44,17 @@ from os.path import exists
 from os import remove
 from functools import partial
 
+###############################################################################
+
+home=str(Path.home())+'/'
+cache=home+'.vkfeed/'
+try:
+	repo=open(cache+'path').read()
+except:
+	repo = str(abspath(dirname(argv[0])))
+	if repo[-1]!='/':
+		repo+='/'
+	open(cache+'path','w').write(repo)
 open(cache+'pid','w').write('')
 
 ###############################################################################
@@ -76,6 +86,16 @@ def err(func):
 
 ###############################################################################
 
+@err
+def process(p,a=()):
+	def run(*q,**w):
+		open(cache+'pid','a').write(str(os.getpid())+'\n')
+		return p(*q,**w)
+	d=Process(target=run,args=a)
+	d.start()
+
+###############################################################################
+
 def service(func):
 	def run():
 		while 1:
@@ -88,7 +108,7 @@ def service(func):
 @err
 def get_db():
 	try:
-		db=loads('['+open(cache+'db.json').read().replace('\n',',')+']')
+		db=loads('['+open(cache+'db.json').read().strip().replace('\n',',')+']')
 	except:
 		db=[]
 	return db
@@ -98,6 +118,7 @@ def addit_db(e):
 	if exists(cache+'db.json'):
 		open(cache+'db.json','a').write(dumps(e)+'\n')
 	else:
+		print('j')
 		open(cache+'db.json','w').write(dumps(e)+'\n')
 
 ###############################################################################
@@ -186,16 +207,6 @@ def get_wifi():
 
 ###############################################################################
 
-@err
-def process(p,a=()):
-	def run(*q,**w):
-		open(cache+'pid','a').write(str(os.getpid())+'\n')
-		return p(*q,**w)
-	d=Process(target=run,args=a)
-	d.start()
-
-###############################################################################
-
 @service
 @err
 def sysmon():
@@ -249,7 +260,6 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
-	free()
 	for w in q:
 #		process(postworker,(w,))
 		postworker(w)
@@ -273,19 +283,15 @@ def postworker(w):
 			url=size['url']
 			size=[size['width'],size['height']]
 			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
-			cacheclear()
 			open(cache+name,'wb').write(urlopen(url).read())
 			sm=check_output(['sum',cache+name]).decode()
 			w['photos'].append({'name':name,'sum':sm,'size':size})
-			print('end')
 	w={'date':str(w['date'])+'.'+str(time()),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 	db=get_db()
 	if [e for e in db if e['orig']==w['orig']]==[]:
 		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
 			if w['text'] or w['photos']:
 				addit_db(w)
-	else:
-		next_=None
 
 @service
 @err
@@ -349,18 +355,6 @@ class MyServer(BaseHTTPRequestHandler):
 
 ###############################################################################
 
-home=str(Path.home())+'/'
-cache=home+'.vkfeed/'
-try:
-	repo=open(cache+'path').read()
-except:
-	repo = str(abspath(dirname(argv[0])))
-	if repo[-1]!='/':
-		repo+='/'
-	open(cache+'path','w').write(repo)
-
-###############################################################################
-
 if not exists(cache):
 	mkdir(cache)
 
@@ -388,9 +382,6 @@ except:
 	pass
 
 process(manager)
-process(monitor)
-process(wifi)
-process(cacheclear)
 
 try:
     myServer.serve_forever()
