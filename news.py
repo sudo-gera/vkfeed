@@ -25,7 +25,7 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
-from psutil import Process pprocess
+from psutil import Process as pprocess
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
@@ -224,7 +224,7 @@ def manager():
 				start_=q['next_from']
 			except:
 				start_=None
-			feed(q)
+			process(feed,(q,))
 		except:
 			error()
 
@@ -251,7 +251,8 @@ def feed(q):
 	q=q['items']
 	free()
 	for w in q:
-		process(postworker,(w,))
+#		process(postworker,(w,))
+		postworker(w)
 
 @err
 def postworker(w):
