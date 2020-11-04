@@ -86,7 +86,6 @@ def err(func):
 
 ###############################################################################
 
-@err
 def process(p,a=()):
 	def run(*q,**w):
 		open(cache+'pid','a').write(str(os.getpid())+'\n')
@@ -286,12 +285,15 @@ def postworker(w):
 			open(cache+name,'wb').write(urlopen(url).read())
 			sm=check_output(['sum',cache+name]).decode()
 			w['photos'].append({'name':name,'sum':sm,'size':size})
-	w={'date':str(w['date'])+'.'+str(time()),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
+	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 	db=get_db()
-	if [e for e in db if e['orig']==w['orig']]==[]:
-		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
-			if w['text'] or w['photos']:
-				addit_db(w)
+	if [e for e in db if postsame(e,w)]==[]:
+		if w['text'] or w['photos']:
+			addit_db(w)
+
+@err
+def postsame(a,s):
+	return textsame(a['text'],s['text']) and set([r['sum'] for r in a['photos']])==set([r['sum'] for r in s['photos']])
 
 @service
 @err
@@ -319,7 +321,7 @@ class MyServer(BaseHTTPRequestHandler):
 		if path[0]=='/':
 			path=path[1:]
 		if path=='':
-			path='feed.html'
+			path='index.html'
 			self.send_response(200)
 			self.send_header("Content-type", "text/html")
 			self.end_headers()
