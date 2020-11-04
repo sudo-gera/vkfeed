@@ -116,31 +116,29 @@ def one_process(fun):
 			d=dict()
 		r=fun(d,*q,**w)
 		open(cache+'vars.json','w').write(dumps(d))
-		err(remove)(cache+'lock')
+		try:
+			remove(cache+'lock')
+		except:
+			pass
 		return r
 	return run
 
 ###############################################################################
 
 @err
-@one_process
-def get_db(d):
+def get_db():
 	try:
-		db=loads(open(cache+'db.json').read())
+		db=loads('['+open(cache+'db.json').read().replace('\n',',')+']')
 	except:
 		db=[]
 	return db
 
 @err
-@one_process
-def add_db(d,a):
-	try:
-		db=loads(open(cache+'db.json').read())
-	except:
-		db=[]
-	db+=[a]
-	open(cache+'db.json','w').write(dumps(db))
-	return db
+def addit_db(e):
+	if exists(cache+'db.json'):
+		open(cache+'db.json','a').write(dumps(e)+'\n')
+	else:
+		open(cache+'db.json','w').write(dumps(e)+'\n')
 
 ###############################################################################
 
@@ -296,36 +294,28 @@ def postworker(w):
 			open(cache+name,'wb').write(urlopen(url).read())
 			sm=check_output(['sum',cache+name]).decode()
 			w['photos'].append({'name':name,'sum':sm,'size':size})
+			print('end')
 	w={'date':str(w['date'])+'.'+str(time()),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 	db=get_db()
 	if [e for e in db if e['orig']==w['orig']]==[]:
 		if [e for e in db if textsame(e['text'],w['text']) and set([r['sum'] for r in e['photos']]) == set([r['sum'] for r in w['photos']])]==[]:
 			if w['text'] or w['photos']:
-				add_db(w)
+				addit_db(w)
 	else:
 		next_=None
 
 @err
-@one_process
-def cacheclear(d):
-	global cache
-	if 'cache_recently_cleared' in d:
-		cache_recently_cleared=d['cache_recently_cleared']
-	else:
-		cache_recently_cleared=0
-	if cache_recently_cleared:
-		cache_recently_cleared-=1
-		return
-	cache_recently_cleared=128
-	while disk_usage(cache).free<2*1024**3:
-		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
-	d['cache_recently_cleared']=cache_recently_cleared
+def cacheclear():
+	while 1:
+		while disk_usage(cache).free<2*1024**3:
+			remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
+		sleep(128)
 
 @err
 def textsame(q,w):
 	q=list(ndiff(q,w))
 	return len([w for w in q if w.startswith('  ')])*2>len(q)
-	
+
 ###############################################################################
 
 class MyServer(BaseHTTPRequestHandler):
@@ -346,7 +336,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
 		elif path=='json':
-			db=get_db(p=10)
+			db=get_db()
 			self.send_response(200)
 			self.send_header("Content-type", "text/json; charset=utf-8")
 			self.end_headers()
@@ -384,6 +374,7 @@ procs=[]
 process(manager)
 process(monitor)
 process(wifi)
+process(cacheclear)
 
 try:
 	remove(cache+'lock')
