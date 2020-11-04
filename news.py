@@ -25,6 +25,7 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
+from psutil import Process pprocess
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
@@ -43,6 +44,8 @@ import os
 from os.path import exists
 from os import remove
 from functools import partial
+
+open(cache+'pid','w').write('')
 
 ###############################################################################
 
@@ -63,8 +66,6 @@ def error():
 	except:
 		pprint(q,format_exc())
 
-###############################################################################
-
 def err(func):
 	def run(*q,**w):
 		try:
@@ -75,53 +76,12 @@ def err(func):
 
 ###############################################################################
 
-@err
-def urlopen(*q,**w):
-	while not get_wifi():
-		sleep(4)
-	return urlop(*q,**w)
-
-###############################################################################
-
-home=str(Path.home())+'/'
-cache=home+'.vkfeed/'
-try:
-	repo=open(cache+'path').read()
-except:
-	repo = str(abspath(dirname(argv[0])))
-	if repo[-1]!='/':
-		repo+='/'
-	open(cache+'path','w').write(repo)
-
-###############################################################################
-
-def one_process(fun):
-	def run(*q,**w):
-		if 'p' not in w.keys():
-			p=1
-		else:
-			p=w['p']
-			del(w['p'])
-		pid=str(os.getpid())
+def service(func):
+	def run():
 		while 1:
-			while exists(cache+'lock'):
-				sleep(0.01/p)
-			open(cache+'lock','w').write(pid)
-			sleep(0.01/p)
-			if open(cache+'lock').read()==pid:
-				break
-		try:
-			d=loads(open(cache+'vars.json').read())
-		except:
-			d=dict()
-		r=fun(d,*q,**w)
-		open(cache+'vars.json','w').write(dumps(d))
-		try:
-			remove(cache+'lock')
-		except:
-			pass
-		return r
-	return run
+			func()
+			sleep(128)
+	process(run)
 
 ###############################################################################
 
@@ -159,7 +119,11 @@ def token():
 	open(cache+'token','w').write(t)
 	return t
 
-###############################################################################
+@err
+def urlopen(*q,**w):
+	while not get_wifi():
+		sleep(4)
+	return urlop(*q,**w)
 
 @err
 def items(q):
@@ -196,27 +160,25 @@ def api(path,data=''):
 
 ###############################################################################
 
+@service
 @err
 def monitor():
-	while 1:
-		print(asctime(),len(get_db()),'posts in cache')
-		sleep(128)
+	print(asctime(),len(get_db()),'posts in cache')
 
 ###############################################################################
 
+@service
 @err
 def wifi():
-	while 1:
-		try:
-			if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
-				wifi_c=1
-			else:
-				wifi_c=0
-		except:
-			print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
+	try:
+		if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
 			wifi_c=1
-		open(cache+'wifi','w').write('+'*wifi_c)
-		sleep(128)
+		else:
+			wifi_c=0
+	except:
+		print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
+		wifi_c=1
+	open(cache+'wifi','w').write('+'*wifi_c)
 
 @err
 def get_wifi():
@@ -226,9 +188,28 @@ def get_wifi():
 
 @err
 def process(p,a=()):
-	d=Process(target=p,args=a)
+	def run(*q,**w):
+		open(cache+'pid','a').write(str(os.getpid())+'\n')
+		return p(*q,**w)
+	d=Process(target=run,args=a)
 	d.start()
-	procs.append(d)
+
+###############################################################################
+
+@service
+@err
+def sysmon():
+	d={}
+	open(cache+'sysmon','w').write(dumps(d))
+
+@err
+def get_sysmon():
+	while 1:
+		try:
+			return loads(open(cache+'sysmon').read())
+		except:
+			pass
+
 
 ###############################################################################
 
@@ -243,7 +224,7 @@ def manager():
 				start_=q['next_from']
 			except:
 				start_=None
-			process(feed,(q,))
+			feed(q)
 		except:
 			error()
 
@@ -268,6 +249,7 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
+	free()
 	for w in q:
 		process(postworker,(w,))
 
@@ -304,12 +286,11 @@ def postworker(w):
 	else:
 		next_=None
 
+@service
 @err
 def cacheclear():
-	while 1:
-		while disk_usage(cache).free<2*1024**3:
-			remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
-		sleep(128)
+	while disk_usage(cache).free<2*1024**3:
+		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 
 @err
 def textsame(q,w):
@@ -322,6 +303,7 @@ class MyServer(BaseHTTPRequestHandler):
 	@err
 	def log_message(*a):
 		pass
+
 	@err
 	def do_GET(self):
 		global cache,repo
@@ -366,15 +348,22 @@ class MyServer(BaseHTTPRequestHandler):
 
 ###############################################################################
 
+home=str(Path.home())+'/'
+cache=home+'.vkfeed/'
+try:
+	repo=open(cache+'path').read()
+except:
+	repo = str(abspath(dirname(argv[0])))
+	if repo[-1]!='/':
+		repo+='/'
+	open(cache+'path','w').write(repo)
+
+###############################################################################
+
 if not exists(cache):
 	mkdir(cache)
 
 token()
-procs=[]
-process(manager)
-process(monitor)
-process(wifi)
-process(cacheclear)
 
 try:
 	remove(cache+'lock')
@@ -397,12 +386,18 @@ try:
 except:
 	pass
 
+process(manager)
+process(monitor)
+process(wifi)
+process(cacheclear)
+
 try:
     myServer.serve_forever()
 except KeyboardInterrupt:
     pass
 
-for w in procs:
-	w.terminate()
+for w in open('pid').read().split('\n'):
+	w=int(w)
+
 myServer.server_close()
 print()
