@@ -1,7 +1,7 @@
 ''':'
 echo -en "loading...\r"
 apt update -yqqq
-apt install python top git -yqqq
+apt install python git -yqqq
 python3 $0 $@
 exit
 ':'''
