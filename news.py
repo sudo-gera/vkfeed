@@ -55,7 +55,9 @@ except:
 	if repo[-1]!='/':
 		repo+='/'
 	open(cache+'path','w').write(repo)
+
 open(cache+'pid','w').write('')
+open(cache+'end','w').write('')
 
 ###############################################################################
 
@@ -89,7 +91,11 @@ def err(func):
 def process(p,a=()):
 	def run(*q,**w):
 		open(cache+'pid','a').write(str(os.getpid())+'\n')
-		return p(*q,**w)
+		try:
+			p(*q,**w)
+		except:
+			error()
+		open(cache+'end','a').write(str(os.getpid())+'\n')
 	d=Process(target=run,args=a)
 	d.start()
 
@@ -234,7 +240,7 @@ def manager():
 				start_=q['next_from']
 			except:
 				start_=None
-			process(feed,(q,))
+			feed(q)
 		except:
 			error()
 
@@ -260,8 +266,10 @@ def feed(q):
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
 	for w in q:
-#		process(postworker,(w,))
-		postworker(w)
+		while open(cache+'pid').read().count('\n')-open(cache+'end').read().count('\n')>64:
+			sleep(1)
+		process(postworker,(w,))
+#		postworker(w)
 
 @err
 def postworker(w):
@@ -390,8 +398,6 @@ try:
 except KeyboardInterrupt:
     pass
 
-for w in open('pid').read().split('\n'):
-	w=int(w)
 
 myServer.server_close()
 print()
