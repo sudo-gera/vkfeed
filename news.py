@@ -351,9 +351,9 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
-	while not sysmon():
-		sleep(4)
 	for w in q:
+		while not sysmon():
+			sleep(4)
 		process(postworker,(w,))	
 
 @err
