@@ -153,7 +153,7 @@ def service_run():
 			except:
 				error()
 		open('service_db.json','w').write(dumps(d))
-		sleep(16)
+		sleep(4)
 
 @err
 def service_get(n):
