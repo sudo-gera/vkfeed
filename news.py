@@ -105,7 +105,10 @@ def killer():
 	end=open('end').read().split('\n')
 	for w in pid:
 		if w != p and w not in end:
-			kill(int(w),SIGTERM)
+			try:
+				kill(int(w),SIGTERM)
+			except:
+				pass
 	exit()
 
 ###############################################################################
