@@ -30,7 +30,7 @@ from multiprocessing import Process
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
-from os.path import chdir
+from os import chdir
 from difflib import ndiff
 try:
 	from shutil import disk_usage
