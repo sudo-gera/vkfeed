@@ -153,7 +153,7 @@ def service_run():
 			except:
 				error()
 		open('service_db.json','w').write(dumps(d))
-		sleep(4)
+		sleep(64)
 
 @err
 def service_get(n):
@@ -282,9 +282,8 @@ def wifi(d):
 
 ###############################################################################
 
-@service
 @err
-def sysmon(d):
+def sysmon():
 	t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
 	t=t[1:-1]
 	t=[w.split() for w in t]
@@ -308,9 +307,11 @@ def sysmon(d):
 	'''
 	print(cu,mu)
 	if cu<64 and mu<64:
-		d['sysmon']=1
-	else:
-		d['sysmon']=0
+#		d['sysmon']=1
+#	else:
+#		d['sysmon']=0
+		return 1
+	return 0
 
 ###############################################################################
 
@@ -350,7 +351,8 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
-	service_wait('sysmon')
+	while not sysmon():
+		sleep(4)
 	for w in q:
 		process(postworker,(w,))	
 
