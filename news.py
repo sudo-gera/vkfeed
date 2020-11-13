@@ -25,6 +25,7 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
+from multiprocessing import Pool
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
@@ -113,12 +114,15 @@ def get_db():
 	return db
 
 @err
-def addit_db(e):
+def addits_db(a):
+	a=a[:]
+	a=[dumps(w)+'\n' for w in a]
+	a=''.join(a)
 	if exists(cache+'db.json'):
-		open(cache+'db.json','a').write(dumps(e)+'\n')
+		open(cache+'db.json','a').write(a)
 	else:
 		print('j')
-		open(cache+'db.json','w').write(dumps(e)+'\n')
+		open(cache+'db.json','w').write(a)
 
 ###############################################################################
 
@@ -259,9 +263,10 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
-	for w in q:
-#		process(postworker,(w,))
-		postworker(w)
+	q=Pool().map(postworker,q)
+	q=sum(q,[])
+	addits_db(q)
+
 
 @err
 def postworker(w):
@@ -289,7 +294,9 @@ def postworker(w):
 	db=get_db()
 	if [e for e in db if postsame(e,w)]==[]:
 		if w['text'] or w['photos']:
-			addit_db(w)
+			return [w]
+	return []
+
 
 @err
 def postsame(a,s):
