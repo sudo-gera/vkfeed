@@ -306,7 +306,8 @@ def sysmon(d):
 	mem=t[[w for w in t if 'mem' in w.lower()][0]]
 	mem_f=float(mem['free'])/float(mem['total'])
 	'''
-	if cu<90 and mu<90:
+	print(cu,mu)
+	if cu<64 and mu<64:
 		d['sysmon']=1
 	else:
 		d['sysmon']=0
