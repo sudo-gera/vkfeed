@@ -56,7 +56,9 @@ except:
 	if repo[-1]!='/':
 		repo+='/'
 	open(cache+'path','w').write(repo)
+
 open(cache+'pid','w').write('')
+open(cache+'end','w').write('')
 
 ###############################################################################
 
@@ -90,7 +92,11 @@ def err(func):
 def process(p,a=()):
 	def run(*q,**w):
 		open(cache+'pid','a').write(str(os.getpid())+'\n')
-		return p(*q,**w)
+		try:
+			p(*q,**w)
+		except:
+			error()
+		open(cache+'end','a').write(str(os.getpid())+'\n')
 	d=Process(target=run,args=a)
 	d.start()
 
@@ -238,7 +244,7 @@ def manager():
 				start_=q['next_from']
 			except:
 				start_=None
-			process(feed,(q,))
+			feed(q)
 		except:
 			error()
 
@@ -263,10 +269,18 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
+<<<<<<< HEAD
 	q=Pool().map(postworker,q)
 	q=sum(q,[])
 	addits_db(q)
 
+=======
+	for w in q:
+		while open(cache+'pid').read().count('\n')-open(cache+'end').read().count('\n')>64:
+			sleep(1)
+		process(postworker,(w,))
+#		postworker(w)
+>>>>>>> 09fbfa483a0e568acb1c271627c534b2589cf3f9
 
 @err
 def postworker(w):
@@ -397,8 +411,6 @@ try:
 except KeyboardInterrupt:
     pass
 
-for w in open('pid').read().split('\n'):
-	w=int(w)
 
 myServer.server_close()
 print()
