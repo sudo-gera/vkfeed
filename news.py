@@ -281,6 +281,13 @@ def wifi(d):
 @service
 @err
 def sysmon(d):
+	t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
+	t=t[1:-1]
+	t=[w.split() for w in t]
+	t=list(zip(*t))
+	cu=sum(map(float,t[0]))
+	mu=sum(map(float,t[1]))
+	'''
 	t=check_output(['top','-b','-n','1']).decode().split('\n')
 	t=[w if w.strip() else '' for w in t]
 	t=t[1:t.index('')]
@@ -294,7 +301,8 @@ def sysmon(d):
 	cpu_f=float(cpu['id'])/100
 	mem=t[[w for w in t if 'mem' in w.lower()][0]]
 	mem_f=float(mem['free'])/float(mem['total'])
-	if cpu_f>0.1 and mem_f>0.1:
+	'''
+	if cu<90 and mu<90:
 		d['sysmon']=1
 	else:
 		d['sysmon']=0
