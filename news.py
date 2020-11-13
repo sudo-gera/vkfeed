@@ -30,6 +30,7 @@ from multiprocessing import Process
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
+from os.path import chdir
 from difflib import ndiff
 try:
 	from shutil import disk_usage
@@ -50,16 +51,19 @@ from functools import partial
 
 home=str(Path.home())+'/'
 cache=home+'.vkfeed/'
+if not exists(cache):
+	mkdir(cache)
+chdir(cache)
 try:
-	repo=open(cache+'path').read()
+	repo=open('path').read()
 except:
 	repo = str(abspath(dirname(argv[0])))
 	if repo[-1]!='/':
 		repo+='/'
-	open(cache+'path','w').write(repo)
+	open('path','w').write(repo)
 
-open(cache+'pid','w').write(str(getpid())+'\n')
-open(cache+'end','w').write('')
+open('pid','w').write(str(getpid())+'\n')
+open('end','w').write('')
 
 ###############################################################################
 
@@ -97,8 +101,8 @@ def err(func):
 
 def killer():
 	p=str(getpid())
-	pid=open(cache+'pid').read().split('\n')
-	end=open(cache+'end').read().split('\n')
+	pid=open('pid').read().split('\n')
+	end=open('end').read().split('\n')
 	for w in pid:
 		if w != p and w not in end:
 			kill(int(w),SIGTERM)
@@ -109,14 +113,14 @@ def killer():
 @err
 def process(p,a=()):
 	def run(*q,**w):
-		open(cache+'pid','a').write(str(getpid())+'\n')
+		open('pid','a').write(str(getpid())+'\n')
 		try:
 			p(*q,**w)
 		except KeyboardInterrupt:
 			killer()
 		except:
 			error()
-		open(cache+'end','a').write(str(getpid())+'\n')
+		open('end','a').write(str(getpid())+'\n')
 	d=Process(target=run,args=a)
 	d.start()
 
@@ -174,7 +178,7 @@ open('service_db.json','w').write(dumps({}))
 @err
 def get_db():
 	try:
-		db=loads('['+open(cache+'db.json').read().strip().replace('\n',',')+']')
+		db=loads('['+open('db.json').read().strip().replace('\n',',')+']')
 	except:
 		db=[]
 	return db
@@ -184,18 +188,18 @@ def addits_db(a):
 	a=a[:]
 	a=[dumps(w)+'\n' for w in a]
 	a=''.join(a)
-	if exists(cache+'db.json'):
-		open(cache+'db.json','a').write(a)
+	if exists('db.json'):
+		open('db.json','a').write(a)
 	else:
 		print('j')
-		open(cache+'db.json','w').write(a)
+		open('db.json','w').write(a)
 
 ###############################################################################
 
 @err
 def token():
 	try:
-		return open(cache+'token').read()
+		return open('token').read()
 	except:
 		pass
 	input('welcome to vkfeed. you will be redirected to the authorization page, where you need to grant all the permissions required for the application to work. After that, you should copy the url of the page and paste it there.\nPress enter to open the page...')
@@ -206,7 +210,7 @@ def token():
 	print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
 	url=input('now paste the url: ')
 	t=url.split('#')[1].split('&')[0].split('=')[1]
-	open(cache+'token','w').write(t)
+	open('token','w').write(t)
 	return t
 
 @err
@@ -255,7 +259,7 @@ def monitor(d):
 	l=len(get_db())
 	try:
 		if l==d['l']==0:
-			remove(cache+'db.json')
+			remove('db.json')
 	except:
 		pass
 	print(asctime(),l,'posts in cache')
@@ -368,8 +372,8 @@ def postworker(w):
 			url=size['url']
 			size=[size['width'],size['height']]
 			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
-			open(cache+name,'wb').write(urlopen(url).read())
-			sm=check_output(['sum',cache+name]).decode()
+			open(name,'wb').write(urlopen(url).read())
+			sm=check_output(['sum',name]).decode()
 			w['photos'].append({'name':name,'sum':sm,'size':size})
 	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 	db=get_db()
@@ -429,7 +433,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.wfile.write(keys.encode())
 		elif '/' not in path:
 			if path[0] in '1234567890' and '/' not in path:
-				path=cache+path
+				path=path
 			elif path[0] in 'qwertyuiopasdfghjklzxcvbnm' and '/' not in path:
 				path=repo+path
 			try:
@@ -446,13 +450,10 @@ class MyServer(BaseHTTPRequestHandler):
 
 process(service_run)
 
-if not exists(cache):
-	mkdir(cache)
-
 token()
 
 try:
-	remove(cache+'lock')
+	remove('lock')
 except:
 	pass
 
