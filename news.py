@@ -15,6 +15,8 @@ from time import asctime
 from traceback import format_exc
 from os.path import exists
 from os import mkdir
+from os import kill
+from signal import SIGTERM
 from os import popen
 from os import listdir
 from os import remove
@@ -25,7 +27,6 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
-from multiprocessing import Pool
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
@@ -40,7 +41,7 @@ except:
 from pprint import pprint
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
-import os
+from os import getpid
 from os.path import exists
 from os import remove
 from functools import partial
@@ -57,10 +58,14 @@ except:
 		repo+='/'
 	open(cache+'path','w').write(repo)
 
-open(cache+'pid','w').write('')
+open(cache+'pid','w').write(str(getpid())+'\n')
 open(cache+'end','w').write('')
 
 ###############################################################################
+
+def lprint(q):
+	print(q)
+	return q
 
 def error():
 	q=format_exc()
@@ -83,31 +88,86 @@ def err(func):
 	def run(*q,**w):
 		try:
 			return func(*q,**w)
+		except KeyboardInterrupt:
+			killer()
 		except:
 			error()
+	run.f_n=func.__name__
 	return run
+
+def killer():
+	p=str(getpid())
+	pid=open(cache+'pid').read().split('\n')
+	end=open(cache+'end').read().split('\n')
+	for w in pid:
+		if w != p and w not in end:
+			kill(int(w),SIGTERM)
+	exit()
 
 ###############################################################################
 
+@err
 def process(p,a=()):
 	def run(*q,**w):
-		open(cache+'pid','a').write(str(os.getpid())+'\n')
+		open(cache+'pid','a').write(str(getpid())+'\n')
 		try:
 			p(*q,**w)
+		except KeyboardInterrupt:
+			killer()
 		except:
 			error()
-		open(cache+'end','a').write(str(os.getpid())+'\n')
+		open(cache+'end','a').write(str(getpid())+'\n')
 	d=Process(target=run,args=a)
 	d.start()
 
 ###############################################################################
 
+@err
 def service(func):
-	def run():
-		while 1:
-			func()
-			sleep(128)
-	process(run)
+	try:
+		d=loads(open('service_db.json').read())
+	except:
+		d={}
+	try:
+		n=func.f_n
+	except:
+		n=__name__
+	d[n]={}
+	open('service_db.json','w').write(dumps(d))
+	return func
+
+@err
+def service_run():
+	while 1:
+		try:
+			d=loads(open('service_db.json').read())
+		except:
+			d={}
+		for w in d.keys():
+			try:
+				eval(w)(d[w])
+			except:
+				error()
+		open('service_db.json','w').write(dumps(d))
+		sleep(16)
+
+@err
+def service_get(n):
+	try:
+		d=loads(open('service_db.json').read())
+	except:
+		d={}
+	try:
+		return d[n][n]
+	except:
+		return None
+
+@err
+def service_wait(n):
+	while not service_get(n):
+		sleep(1)
+
+open('service_db.json','w').write(dumps({}))
 
 ###############################################################################
 
@@ -151,8 +211,7 @@ def token():
 
 @err
 def urlopen(*q,**w):
-	while not get_wifi():
-		sleep(4)
+	service_wait('wifi')
 	return urlop(*q,**w)
 
 @err
@@ -192,14 +251,21 @@ def api(path,data=''):
 
 @service
 @err
-def monitor():
-	print(asctime(),len(get_db()),'posts in cache')
+def monitor(d):
+	l=len(get_db())
+	try:
+		if l==d['l']==0:
+			remove(cache+'db.json')
+	except:
+		pass
+	print(asctime(),l,'posts in cache')
+	d['l']=l
 
 ###############################################################################
 
 @service
 @err
-def wifi():
+def wifi(d):
 	try:
 		if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
 			wifi_c=1
@@ -208,28 +274,30 @@ def wifi():
 	except:
 		print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
 		wifi_c=1
-	open(cache+'wifi','w').write('+'*wifi_c)
-
-@err
-def get_wifi():
-	return open(cache+'wifi').read()
+	d['wifi']=wifi_c
 
 ###############################################################################
 
 @service
 @err
-def sysmon():
-	d={}
-	open(cache+'sysmon','w').write(dumps(d))
-
-@err
-def get_sysmon():
-	while 1:
-		try:
-			return loads(open(cache+'sysmon').read())
-		except:
-			pass
-
+def sysmon(d):
+	t=check_output(['top','-b','-n','1']).decode().split('\n')
+	t=[w if w.strip() else '' for w in t]
+	t=t[1:t.index('')]
+	t=[w.split(':',1) for w in t]
+	for w in t:
+		w[1]=w[1].split(',')
+		w[1]=[e.strip().split(' ',1)[::-1] for e in w[1]]
+		w[1]=dict(w[1])
+	t=dict(t)
+	cpu=t[[w for w in t if 'cpu' in w.lower()][0]]
+	cpu_f=float(cpu['id'])/100
+	mem=t[[w for w in t if 'mem' in w.lower()][0]]
+	mem_f=float(mem['free'])/float(mem['total'])
+	if cpu_f>0.1 and mem_f>0.1:
+		d['sysmon']=1
+	else:
+		d['sysmon']=0
 
 ###############################################################################
 
@@ -239,7 +307,7 @@ def manager():
 	while 1:
 		try:
 			sleep(0.3344554433)
-			q=api('newsfeed.get?filters=post&max_photos=100&count=4'+('&start_from='+start_ if start_ else ''))
+			q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
 			try:
 				start_=q['next_from']
 			except:
@@ -269,18 +337,9 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
-<<<<<<< HEAD
-	q=Pool().map(postworker,q)
-	q=sum(q,[])
-	addits_db(q)
-
-=======
+	service_wait('sysmon')
 	for w in q:
-		while open(cache+'pid').read().count('\n')-open(cache+'end').read().count('\n')>64:
-			sleep(1)
-		process(postworker,(w,))
-#		postworker(w)
->>>>>>> 09fbfa483a0e568acb1c271627c534b2589cf3f9
+		process(postworker,(w,))	
 
 @err
 def postworker(w):
@@ -308,8 +367,7 @@ def postworker(w):
 	db=get_db()
 	if [e for e in db if postsame(e,w)]==[]:
 		if w['text'] or w['photos']:
-			return [w]
-	return []
+			addits_db([w])
 
 
 @err
@@ -318,7 +376,7 @@ def postsame(a,s):
 
 @service
 @err
-def cacheclear():
+def cacheclear(d):
 	while disk_usage(cache).free<2*1024**3:
 		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 
@@ -378,6 +436,8 @@ class MyServer(BaseHTTPRequestHandler):
 
 ###############################################################################
 
+process(service_run)
+
 if not exists(cache):
 	mkdir(cache)
 
@@ -407,10 +467,10 @@ except:
 process(manager)
 
 try:
-    myServer.serve_forever()
+	myServer.serve_forever()
 except KeyboardInterrupt:
-    pass
-
+	killer()
+killer()
 
 myServer.server_close()
 print()
