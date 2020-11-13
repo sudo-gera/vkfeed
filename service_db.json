@@ -1,0 +1,5 @@
+<<<<<<< HEAD
+{"monitor": {"l": 17019}, "wifi": {"wifi": 1}, "sysmon": {}, "cacheclear": {}}
+=======
+{"monitor": {"l": 3158}, "wifi": {"wifi": 1}, "sysmon": {"sysmon": 0}, "cacheclear": {}}
+>>>>>>> 272acaa563fd0a70a0873383d6d595f9987649b4
