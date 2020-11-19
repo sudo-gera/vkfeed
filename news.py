@@ -32,13 +32,7 @@ from os.path import abspath
 from os.path import dirname
 from os import chdir
 from difflib import ndiff
-try:
-	from shutil import disk_usage
-except:
-	try:
-		from psutil import disk_usage
-	except:
-		from shutil import disk_usage
+from shutil import disk_usage
 from pprint import pprint
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
@@ -46,6 +40,7 @@ from os import getpid
 from os.path import exists
 from os import remove
 from functools import partial
+from functools import wraps
 
 ###############################################################################
 
@@ -89,6 +84,7 @@ def error():
 		pprint(q,format_exc())
 
 def err(func):
+	@wraps(func)
 	def run(*q,**w):
 		try:
 			return func(*q,**w)
@@ -182,6 +178,15 @@ open('service_db.json','w').write(dumps({}))
 def get_db():
 	try:
 		db=loads('['+open('db.json').read().strip().replace('\n',',')+']')
+		db=open('db.json').read().strip().split('\n')
+		db=[[w] for w in db]
+		for w in db:
+			try:
+				w[0]=loads(w[0])
+			except:
+				w[0]=loads
+		db=[w[0] for w in db if type(w[0])==type(dict())]
+		return db
 	except:
 		db=[]
 	return db
@@ -194,7 +199,6 @@ def addits_db(a):
 	if exists('db.json'):
 		open('db.json','a').write(a)
 	else:
-		print('j')
 		open('db.json','w').write(a)
 
 ###############################################################################
@@ -287,32 +291,39 @@ def wifi(d):
 
 @err
 def sysmon():
-	t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
-	t=t[1:-1]
-	t=[w.split() for w in t]
-	t=list(zip(*t))
-	cu=sum(map(float,t[0]))
-	mu=sum(map(float,t[1]))
-	'''
-	t=check_output(['top','-b','-n','1']).decode().split('\n')
-	t=[w if w.strip() else '' for w in t]
-	t=t[1:t.index('')]
-	t=[w.split(':',1) for w in t]
-	for w in t:
-		w[1]=w[1].split(',')
-		w[1]=[e.strip().split(' ',1)[::-1] for e in w[1]]
-		w[1]=dict(w[1])
-	t=dict(t)
-	cpu=t[[w for w in t if 'cpu' in w.lower()][0]]
-	cpu_f=float(cpu['id'])/100
-	mem=t[[w for w in t if 'mem' in w.lower()][0]]
-	mem_f=float(mem['free'])/float(mem['total'])
-	'''
-#	print(cu,mu)
-	if cu<64 and mu<64:
-#		d['sysmon']=1
-#	else:
-#		d['sysmon']=0
+	cu=mu=0
+	try:
+		t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
+		t=t[1:-1]
+		t=[w.split() for w in t]
+		t=list(zip(*t))
+		cu=sum(map(float,t[0]))/100
+		mu=sum(map(float,t[1]))/100
+		t=check_output(['top','-b','-n','1']).decode().split('\n')
+		t=[w.split('%') for w in t]
+		t=[w[0] for w in t if len(w)>1 and w[0].isdigit() and w[1].startswith('cpu')][0]
+		cu*=100
+		cu/=t
+	except:
+		error()
+	try:
+		t=check_output(['top','-b','-n','1']).decode().split('\n')
+		t=[w if w.strip() else '' for w in t]
+		t=t[1:t.index('')]
+		t=[w.split(':',1) for w in t]
+		for w in t:
+			w[1]=w[1].replace(',','.').split('. ')
+			w[1]=[e.strip().split(' ',1)[::-1] for e in w[1]]
+			w[1]=dict(w[1])
+		t=dict(t)
+		cpu=t[[w for w in t if 'cpu' in w.lower()][0]]
+		cpu_f=float(cpu['id'])/100
+		mem=t[[w for w in t if 'mem' in w.lower()][0]]
+		mu=float(mem['used'])/float(mem['total'])
+		cu=1-cpu_f
+	except:
+		error()
+	if cu<0.64 and mu<0.9:
 		return 1
 	return 0
 
@@ -378,24 +389,20 @@ def postworker(w):
 			url=size['url']
 			size=[size['width'],size['height']]
 			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
-			open(name,'wb').write(urlopen(url).read())
-			sm=check_output(['sum',name]).decode()
-			w['photos'].append({'name':name,'sum':sm,'size':size})
+			h=urlopen(url).read()
+			open(name,'wb').write(h)
+			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
 	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 	db=get_db()
-	if [e for e in db if postsame(e,w)]==[]:
+	if [e for e in db if e['orig']==w['orig']]==[]:
 		if w['text'] or w['photos']:
 			addits_db([w])
 
 
-@err
-def postsame(a,s):
-	return textsame(a['text'],s['text']) and set([r['sum'] for r in a['photos']])==set([r['sum'] for r in s['photos']])
-
 @service
 @err
 def cacheclear(d):
-	while disk_usage(cache).free<2*1024**3:
+	while disk_usage(cache).used>disk_usage(cache).total*0.64:
 		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 
 @err
