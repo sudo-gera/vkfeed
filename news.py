@@ -303,7 +303,7 @@ def sysmon():
 		t=[w.split('%') for w in t]
 		t=[w[0] for w in t if len(w)>1 and w[0].isdigit() and w[1].startswith('cpu')][0]
 		cu*=100
-		cu/=t
+		cu/=float(t)
 	except:
 		error()
 	try:
