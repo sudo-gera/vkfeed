@@ -305,7 +305,7 @@ def sysmon():
 		cu*=100
 		cu/=float(t)
 	except:
-		error()
+		pass
 	try:
 		t=check_output(['top','-b','-n','1']).decode().split('\n')
 		t=[w if w.strip() else '' for w in t]
@@ -322,7 +322,7 @@ def sysmon():
 		mu=float(mem['used'])/float(mem['total'])
 		cu=1-cpu_f
 	except:
-		error()
+		pass
 	if cu<0.64 and mu<0.9:
 		return 1
 	return 0
