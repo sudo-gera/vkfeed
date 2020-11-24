@@ -49,6 +49,11 @@ cache=home+'.vkfeed/'
 if not exists(cache):
 	mkdir(cache)
 chdir(cache)
+if not exists('post/'):
+	mkdir('post/')
+open('post/00_0','w').write(dumps({'date':'0','public':'vkfeed','orig':'0_0','text':'creating cache...\nconnect to wifi, wait 10 minutes and refresh the page','photos':[]}))
+if not exists('img/'):
+	mkdir('img/')
 try:
 	repo=open('path').read()
 except:
@@ -177,29 +182,10 @@ open('service_db.json','w').write(dumps({}))
 @err
 def get_db():
 	try:
-		db=loads('['+open('db.json').read().strip().replace('\n',',')+']')
-		db=open('db.json').read().strip().split('\n')
-		db=[[w] for w in db]
-		for w in db:
-			try:
-				w[0]=loads(w[0])
-			except:
-				w[0]=loads
-		db=[w[0] for w in db if type(w[0])==type(dict())]
-		return db
+		db=sorted(listdir('post/'))[::-1]
 	except:
 		db=[]
 	return db
-
-@err
-def addits_db(a):
-	a=a[:]
-	a=[dumps(w)+'\n' for w in a]
-	a=''.join(a)
-	if exists('db.json'):
-		open('db.json','a').write(a)
-	else:
-		open('db.json','w').write(a)
 
 ###############################################################################
 
@@ -390,20 +376,23 @@ def postworker(w):
 			size=[size['width'],size['height']]
 			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
 			h=urlopen(url).read()
-			open(name,'wb').write(h)
+			open('img/'+name,'wb').write(h)
 			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
 	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	db=get_db()
-	if [e for e in db if e['orig']==w['orig']]==[]:
-		if w['text'] or w['photos']:
-			addits_db([w])
-
+	open('post/'+w['date']+w['orig'],'w').write(dumps(w))
 
 @service
 @err
 def cacheclear(d):
-	while disk_usage(cache).used>disk_usage(cache).total*0.64:
+	while disk_usage(cache).used>disk_usage(cache).total*0.9:
 		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
+	old=str(time()-86400*7)
+	for w in listdir('img/'):
+		if w<old:
+			remove('img/'+w)
+	for w in listdir('post/'):
+		if w<old:
+			remove('post/'+w)
 
 @err
 def textsame(q,w):
@@ -430,45 +419,36 @@ class MyServer(BaseHTTPRequestHandler):
 			self.send_header("Content-type", "text/html")
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
-		elif path=='json':
+			return
+		if path=='json':
 			db=get_db()
+			if len(db)>1:
+				db=[w for w in db if w!='00_0']
+			db=[{'url':w} for w in db]
 			self.send_response(200)
 			self.send_header("Content-type", "text/json; charset=utf-8")
 			self.end_headers()
-			keys=db[:]
-			keys.sort(key=lambda f:f['date'])
-			for w in keys:
-				w['photos']=[e['name'] for e in w['photos']]
-			keys=keys[::-1]
-			if len(keys)==0:
-				keys.append({'date':'0.0.0','public':'vkfeed','text':'creating cache...\n wait 10 mintes and refresh','orig':'0_0','photos':[]})
-			keys=dumps(keys)
-			self.wfile.write(keys.encode())
-		elif '/' not in path:
-			if path[0] in '1234567890' and '/' not in path:
-				path=path
-			elif path[0] in 'qwertyuiopasdfghjklzxcvbnm' and '/' not in path:
-				path=repo+path
-			try:
+			db=dumps(db)
+			self.wfile.write(db.encode())
+			return
+		path=path.split('/')
+		if len(path)==1:
+			path=[repo]+path
+		if len(path)==2 and path[0] in [repo,'img','post']:
+			path='/'.join(path)
+			if exists(path):
 				self.send_response(200)
 				self.send_header("Content-type", "file/file")
 				self.end_headers()
 				self.wfile.write(open(path,'rb').read())
-			except:
+			else:
 				self.send_response(404)
 				self.send_header("Content-type", "file/file")
 				self.end_headers()
 
 ###############################################################################
 
-process(service_run)
-
 token()
-
-try:
-	remove('lock')
-except:
-	pass
 
 hostPort = 9876
 
@@ -486,6 +466,7 @@ try:
 except:
 	pass
 
+process(service_run)
 process(manager)
 
 try:
