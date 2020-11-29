@@ -384,7 +384,7 @@ def postworker(w):
 @service
 @err
 def cacheclear(d):
-	while disk_usage(cache).used>disk_usage(cache).total*0.9:
+	while disk_usage(cache).used>disk_usage(cache).total*0.64:
 		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
 	old=str(time()-86400*7)
 	for w in listdir('img/'):
