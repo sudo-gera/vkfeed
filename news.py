@@ -374,7 +374,7 @@ def postworker(w):
 			size=[r for r in e['sizes'] if r['width']==a][0]
 			url=size['url']
 			size=[size['width'],size['height']]
-			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
+			name=str(time())+'__'+w['date']+w['orig']+'__'+url.split('/')[-1].split('?')[0]
 			h=urlopen(url).read()
 			open('img/'+name,'wb').write(h)
 			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
@@ -384,15 +384,16 @@ def postworker(w):
 @service
 @err
 def cacheclear(d):
-	while disk_usage(cache).used>disk_usage(cache).total*0.64:
-		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
-	old=str(time()-86400*7)
-	for w in listdir('img/'):
-		if w<old:
-			remove('img/'+w)
-	for w in listdir('post/'):
-		if w<old:
-			remove('post/'+w)
+	age=86400*7
+	while disk_usage(cache).used>disk_usage(cache).total*0.9:
+		old=str(time()-age)
+		for w in listdir('img/'):
+			if w<old:
+				remove('img/'+w)
+		for w in listdir('post/'):
+			if w<old:
+				remove('post/'+w)
+		age/=2
 
 @err
 def textsame(q,w):
