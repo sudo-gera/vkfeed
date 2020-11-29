@@ -361,6 +361,8 @@ def postworker(w):
 	w['photos']=[]
 	if 'attachments' not in w:
 		w['attachments']=[]
+	date=str(w['date'])
+	orig=w['original']
 	for e in w['attachments']:
 		if e['type']=='photo':
 			e=e['photo']
@@ -374,7 +376,7 @@ def postworker(w):
 			size=[r for r in e['sizes'] if r['width']==a][0]
 			url=size['url']
 			size=[size['width'],size['height']]
-			name=str(time())+'__'+w['date']+w['orig']+'__'+url.split('/')[-1].split('?')[0]
+			name=str(time())+'__'+date+orig+'__'+url.split('/')[-1].split('?')[0]
 			h=urlopen(url).read()
 			open('img/'+name,'wb').write(h)
 			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
