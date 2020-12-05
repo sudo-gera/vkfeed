@@ -354,10 +354,11 @@ def feed(q):
 	for w in q:
 		while not sysmon():
 			sleep(4)
-		process(postworker,(w,))	
+		process(postworker,(w,))
 
 @err
 def postworker(w):
+	cacheclear(0)
 	w['photos']=[]
 	if 'attachments' not in w:
 		w['attachments']=[]
@@ -386,16 +387,19 @@ def postworker(w):
 @service
 @err
 def cacheclear(d):
-	age=86400*7
-	while disk_usage(cache).used>disk_usage(cache).total*0.9:
-		old=str(time()-age)
-		for w in listdir('img/'):
-			if w<old:
-				remove('img/'+w)
-		for w in listdir('post/'):
-			if w<old:
-				remove('post/'+w)
-		age/=2
+	if disk_usage(cache).used>disk_usage(cache).total*0.95:
+		a=sorted(listdir('img/')+listdir('post/'))
+		for w in a:
+			try:
+				remove('img/'+a[0])
+			except:
+				pass
+			try:
+				remove('post/'+a[0])
+			except:
+				pass
+			if disk_usage(cache).used<disk_usage(cache).total*0.9:
+				break
 
 @err
 def textsame(q,w):
@@ -479,4 +483,5 @@ except KeyboardInterrupt:
 killer()
 
 myServer.server_close()
+sleep(0.7)
 print()
