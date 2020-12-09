@@ -309,6 +309,7 @@ def sysmon():
 		cu=1-cpu_f
 	except:
 		pass
+	print(cu,mu)
 	if cu<0.64 and mu<0.9:
 		return 1
 	return 0
