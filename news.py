@@ -260,6 +260,8 @@ def monitor(d):
 		news=len([w for w in db if w not in d['all']])
 		dels=len([w for w in d['all'] if w not in db])
 		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db)))
+	else:
+		print(asctime()+'; total posts: '+str(len(db)))
 	d['all']=db
 
 ###############################################################################
