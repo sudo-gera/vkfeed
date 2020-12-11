@@ -115,16 +115,18 @@ def killer():
 ###############################################################################
 
 @err
-def process(p,a=()):
+def process(p,a=(),/,nokill=0):
 	def run(*q,**w):
-		open('pid','a').write(str(getpid())+'\n')
+		if nokill==0:
+			open('pid','a').write(str(getpid())+'\n')
 		try:
 			p(*q,**w)
 		except KeyboardInterrupt:
 			killer()
 		except:
 			error()
-		open('end','a').write(str(getpid())+'\n')
+		if nokill==0:
+			open('end','a').write(str(getpid())+'\n')
 	d=Process(target=run,args=a)
 	d.start()
 
@@ -191,6 +193,10 @@ def get_db():
 
 @err
 def token():
+	try:
+		return vk_token
+	except:
+		pass
 	try:
 		return open('token').read()
 	except:
@@ -309,8 +315,7 @@ def sysmon():
 		cu=1-cpu_f
 	except:
 		pass
-	print(cu,mu)
-	if cu<0.64 and mu<0.9:
+	if cu<0.3 and mu<0.9:
 		return 1
 	return 0
 
@@ -318,6 +323,7 @@ def sysmon():
 
 @err
 def manager():
+	vk_token=token()
 	start_=None
 	while 1:
 		try:
@@ -380,45 +386,12 @@ def feed(q):
 	for w in td:
 		while not sysmon():
 			sleep(4)
-<<<<<<< HEAD
-		process(photoworker,w)	
+		process(photoworker,w,nokill=1)	
 
 @err
 def photoworker(url,name):
 	h=urlopen(url).read()
 	open('img/'+name,'wb').write(h)
-
-=======
-		process(postworker,(w,))
-
-@err
-def postworker(w):
-	cacheclear(0)
-	w['photos']=[]
-	if 'attachments' not in w:
-		w['attachments']=[]
-	date=str(w['date'])
-	orig=w['original']
-	for e in w['attachments']:
-		if e['type']=='photo':
-			e=e['photo']
-			e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
-			a=0
-			for r in e['sizes']:
-				if r['width']<729:
-					a=max(a,r['width'])
-			if a==0:
-				a=e['sizes'][0]['width']
-			size=[r for r in e['sizes'] if r['width']==a][0]
-			url=size['url']
-			size=[size['width'],size['height']]
-			name=str(time())+'__'+date+orig+'__'+url.split('/')[-1].split('?')[0]
-			h=urlopen(url).read()
-			open('img/'+name,'wb').write(h)
-			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
-	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	open('post/'+w['date']+w['orig'],'w').write(dumps(w))
->>>>>>> 691f07f2b53a6ec6759c7146989490304c17d35d
 
 @service
 @err
