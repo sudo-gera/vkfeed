@@ -400,15 +400,16 @@ def photoworker(url,name):
 @service
 @err
 def cacheclear(d):
+#	print(disk_usage(cache))
 	if disk_usage(cache).used>disk_usage(cache).total*0.95:
 		a=sorted(listdir('img/')+listdir('post/'))
 		for w in a:
 			try:
-				remove('img/'+a[0])
+				remove('img/'+w)
 			except:
 				pass
 			try:
-				remove('post/'+a[0])
+				remove('post/'+w)
 			except:
 				pass
 			if disk_usage(cache).used<disk_usage(cache).total*0.9:
