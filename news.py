@@ -351,37 +351,41 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
+	td=[]
 	for w in q:
+		w['photos']=[]
+		if 'attachments' not in w:
+			w['attachments']=[]
+		date=str(w['date'])
+		orig=w['original']
+		for e in w['attachments']:
+			if e['type']=='photo':
+				e=e['photo']
+				e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
+				a=0
+				for r in e['sizes']:
+					if r['width']<729:
+						a=max(a,r['width'])
+				if a==0:
+					a=e['sizes'][0]['width']
+				size=[r for r in e['sizes'] if r['width']==a][0]
+				url=size['url']
+				size=[size['width'],size['height']]
+				name=str(time())+'__'+date+orig+'__'+url.split('/')[-1].split('?')[0]
+				td.append([url,name])
+				w['photos'].append({'name':name,'p_size':size})
+		w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
+		open('post/'+w['date']+w['orig'],'w').write(dumps(w))
+	for w in td:
 		while not sysmon():
 			sleep(4)
-		process(postworker,(w,))	
+		process(photoworker,w)	
 
 @err
-def postworker(w):
-	w['photos']=[]
-	if 'attachments' not in w:
-		w['attachments']=[]
-	date=str(w['date'])
-	orig=w['original']
-	for e in w['attachments']:
-		if e['type']=='photo':
-			e=e['photo']
-			e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
-			a=0
-			for r in e['sizes']:
-				if r['width']<729:
-					a=max(a,r['width'])
-			if a==0:
-				a=e['sizes'][0]['width']
-			size=[r for r in e['sizes'] if r['width']==a][0]
-			url=size['url']
-			size=[size['width'],size['height']]
-			name=str(time())+'__'+date+orig+'__'+url.split('/')[-1].split('?')[0]
-			h=urlopen(url).read()
-			open('img/'+name,'wb').write(h)
-			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
-	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	open('post/'+w['date']+w['orig'],'w').write(dumps(w))
+def photoworker(url,name):
+	h=urlopen(url).read()
+	open('img/'+name,'wb').write(h)
+
 
 @service
 @err
