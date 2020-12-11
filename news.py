@@ -255,14 +255,17 @@ def api(path,data=''):
 @service
 @err
 def monitor(d):
-	l=len(get_db())
-	try:
-		if l==d['l']==0:
-			remove('db.json')
-	except:
-		pass
-	print(asctime(),l,'posts in cache')
-	d['l']=l
+	db=get_db()
+	if 'count' in d and 'newest' in d:
+		if d['newest'] in db:
+			news=db.index(d['newest'])
+			dels=d['count']-len(db)+news
+			print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db)))
+		else:
+			print(asctime()+'; total posts: '+str(len(db)))
+	d['newest']=db[0]
+	d['count']=len(db)
+
 
 ###############################################################################
 
@@ -282,7 +285,7 @@ def wifi(d):
 ###############################################################################
 
 @err
-def sysmon():
+def sysfree():
 	cu=mu=0
 	try:
 		t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
@@ -329,7 +332,6 @@ def manager():
 		try:
 			sleep(0.3344554433)
 			q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
-			pprint(q)
 			try:
 				start_=q['next_from']
 			except:
@@ -359,6 +361,10 @@ def feed(q):
 			error()
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
+	for w in q:
+		if 'marked_as_ads' not in w:
+			w['marked_as_ads']=0
+	q=[w for w in q if w['marked_as_ads']==0]
 	td=[]
 	for w in q:
 		w['photos']=[]
@@ -385,9 +391,9 @@ def feed(q):
 		w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
 		open('post/'+w['date']+w['orig'],'w').write(dumps(w))
 	for w in td:
-		while not sysmon():
+		while not sysfree():
 			sleep(4)
-		process(photoworker,w,nokill=1)	
+		process(photoworker,w,nokill=1)
 
 @err
 def photoworker(url,name):
