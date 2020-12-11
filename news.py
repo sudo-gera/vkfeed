@@ -329,6 +329,7 @@ def manager():
 		try:
 			sleep(0.3344554433)
 			q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
+			pprint(q)
 			try:
 				start_=q['next_from']
 			except:
