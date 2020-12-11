@@ -256,16 +256,11 @@ def api(path,data=''):
 @err
 def monitor(d):
 	db=get_db()
-	if 'count' in d and 'newest' in d:
-		if d['newest'] in db:
-			news=db.index(d['newest'])
-			dels=d['count']-len(db)+news
-			print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db)))
-		else:
-			print(asctime()+'; total posts: '+str(len(db)))
-	d['newest']=db[0]
-	d['count']=len(db)
-
+	if 'all' in d:
+		news=len([w for w in db if w not in d['all']])
+		dels=len([w for w in d['all'] if w not in db])
+		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db)))
+	d['all']=db
 
 ###############################################################################
 
