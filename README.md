@@ -1,9 +1,7 @@
 # vkfeed
 ## instruction for installing on android:
-###### open playmarket
-###### install termux
-###### install termux-api
-###### check if your device is connected to internet
+###### from playmarket install termux
+###### from playmarket install termux-api
 ###### open termux and type theese comands:
 ```
 pkg install git
