@@ -52,8 +52,6 @@ chdir(cache)
 if not exists('post/'):
 	mkdir('post/')
 open('post/00_0','w').write(dumps({'date':'0','public':'vkfeed','orig':'0_0','text':'creating cache...\nconnect to wifi, wait 10 minutes and refresh the page','photos':[]}))
-if not exists('img/'):
-	mkdir('img/')
 try:
 	repo=open('path').read()
 except:
