@@ -96,9 +96,9 @@ function posttotext(q){
 				st=fi
 			}
 			q=json
-			text='<br><h3>'+q.public+'</h3><h5>'+q.text+'</h5><br>'
+			text='<br><h1>'+q.public+'</h1><h3>'+q.text+'</h3><br>'
 			for (photo of q.photos){
-				text+='\n<img src=/img/'+photo.name+' width="100%"><br>'
+				text+='\n<img src="data:image/png;base64,'+photo+' "width="100%"><br>'
 			}
 			text+='\n<div class="orig"><h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img height="64px" src=orig.png width="64px"></a></h3></div>'
 			document.getElementById('_'+st).innerHTML=text

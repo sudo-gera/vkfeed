@@ -33,7 +33,6 @@ from os.path import dirname
 from os import chdir
 from difflib import ndiff
 from shutil import disk_usage
-from pprint import pprint
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote as uqu
 from os import getpid
@@ -41,6 +40,7 @@ from os.path import exists
 from os import remove
 from functools import partial
 from functools import wraps
+from base64 import b64encode
 
 ###############################################################################
 
@@ -110,21 +110,29 @@ def killer():
 				kill(int(w),SIGTERM)
 			except:
 				pass
+	sleep(0.7)
+	print()
 	exit()
 
 ###############################################################################
 
 @err
-def process(p,a=()):
+def process(p,a=(),nokill=0,force=1):
 	def run(*q,**w):
-		open('pid','a').write(str(getpid())+'\n')
+		if nokill==0:
+			open('pid','a').write(str(getpid())+'\n')
 		try:
 			p(*q,**w)
 		except KeyboardInterrupt:
 			killer()
 		except:
 			error()
-		open('end','a').write(str(getpid())+'\n')
+		if nokill==0:
+			open('end','a').write(str(getpid())+'\n')
+	if force==0:
+		while not sysfree():
+			delay=2+0.25*(len(open('pid').read().split('\n'))-len(open('end').read().split('\n')))
+			sleep(delay)
 	d=Process(target=run,args=a)
 	d.start()
 
@@ -192,6 +200,10 @@ def get_db():
 @err
 def token():
 	try:
+		return vk_token
+	except:
+		pass
+	try:
 		return open('token').read()
 	except:
 		pass
@@ -242,21 +254,21 @@ def api(path,data=''):
 	try:
 		print(ret['error']['error_msg'])
 	except:
-		print(ret)
+		pprint(ret)
 
 ###############################################################################
 
 @service
 @err
 def monitor(d):
-	l=len(get_db())
-	try:
-		if l==d['l']==0:
-			remove('db.json')
-	except:
-		pass
-	print(asctime(),l,'posts in cache')
-	d['l']=l
+	db=get_db()
+	if 'all' in d:
+		news=len([w for w in db if w not in d['all']])
+		dels=len([w for w in d['all'] if w not in db])
+		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db))+'\n')
+	else:
+		print(asctime()+'; total posts: '+str(len(db))+'\n')
+	d['all']=db
 
 ###############################################################################
 
@@ -269,14 +281,14 @@ def wifi(d):
 		else:
 			wifi_c=0
 	except:
-		print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
+		print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install\n')
 		wifi_c=1
 	d['wifi']=wifi_c
 
 ###############################################################################
 
 @err
-def sysmon():
+def sysfree():
 	cu=mu=0
 	try:
 		t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
@@ -309,7 +321,7 @@ def sysmon():
 		cu=1-cpu_f
 	except:
 		pass
-	if cu<0.64 and mu<0.9:
+	if cu<0.3 and mu<0.9:
 		return 1
 	return 0
 
@@ -317,6 +329,7 @@ def sysmon():
 
 @err
 def manager():
+	vk_token=token()
 	start_=None
 	while 1:
 		try:
@@ -352,15 +365,19 @@ def feed(q):
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
 	for w in q:
-		while not sysmon():
-			sleep(4)
-		process(postworker,(w,))	
+		if 'marked_as_ads' not in w:
+			w['marked_as_ads']=0
+	q=[w for w in q if w['marked_as_ads']==0]
+	for w in q:
+		process(postworker,(w,),force=0)
 
-@err
 def postworker(w):
+	photodata=bytearray()
 	w['photos']=[]
 	if 'attachments' not in w:
 		w['attachments']=[]
+	date=str(w['date'])
+	orig=w['original']
 	for e in w['attachments']:
 		if e['type']=='photo':
 			e=e['photo']
@@ -374,30 +391,32 @@ def postworker(w):
 			size=[r for r in e['sizes'] if r['width']==a][0]
 			url=size['url']
 			size=[size['width'],size['height']]
-			name=str(time())+'.'+url.split('/')[-1].split('?')[0]
-			h=urlopen(url).read()
-			open('img/'+name,'wb').write(h)
-			w['photos'].append({'name':name,'p_size':size,'f_size':len(h)})
+			w['photos'].append(len(photodata))
+			photodata+=urlopen(url).read()
 	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	open('post/'+w['date']+w['orig'],'w').write(dumps(w))
+	postname=w['date']+w['orig']
+	w=dumps(w)
+	w+='\0'
+	w=w.encode()
+	w=bytearray(w)
+	w+=photodata
+	open('post/'+postname,'wb').write(w)
+
+
+###############################################################################
 
 @service
 @err
 def cacheclear(d):
-	while disk_usage(cache).used>disk_usage(cache).total*0.9:
-		remove(sorted([w for w in listdir(cache) if w[0] in '1234567890'])[0])
-	old=str(time()-86400*7)
-	for w in listdir('img/'):
-		if w<old:
-			remove('img/'+w)
-	for w in listdir('post/'):
-		if w<old:
-			remove('post/'+w)
-
-@err
-def textsame(q,w):
-	q=list(ndiff(q,w))
-	return len([w for w in q if w.startswith('  ')])*2>len(q)
+	if disk_usage(cache).used>disk_usage(cache).total*0.95:
+		a=sorted(listdir('img/')+listdir('post/'))
+		for w in a:
+			try:
+				remove('post/'+w)
+			except:
+				pass
+			if disk_usage(cache).used<disk_usage(cache).total*0.9:
+				break
 
 ###############################################################################
 
@@ -434,13 +453,30 @@ class MyServer(BaseHTTPRequestHandler):
 		path=path.split('/')
 		if len(path)==1:
 			path=[repo]+path
-		if len(path)==2 and path[0] in [repo,'img','post']:
+		if len(path)==2 and path[0] in [repo,'post']:
+			post=0
+			if path[0]=='post':
+				post=1
 			path='/'.join(path)
 			if exists(path):
 				self.send_response(200)
 				self.send_header("Content-type", "file/file")
 				self.end_headers()
-				self.wfile.write(open(path,'rb').read())
+				file=open(path,'rb').read()
+				if post:
+					file=bytearray(file)
+					file=file.split('\0'.encode(),1)
+					j=loads(file[0].decode())
+					p=j['photos']
+					w=0
+					while w!=len(p):
+						p[w]=file[1][p[w]:p[w+1] if w+1<len(p) else len(file[1])]
+						w+=1
+					p=[b64encode(w).decode() for w in p]
+					j['photos']=p
+					file=dumps(j)
+					file=file.encode()
+				self.wfile.write(file)
 			else:
 				self.send_response(404)
 				self.send_header("Content-type", "file/file")
