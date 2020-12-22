@@ -26,14 +26,14 @@ function onscroll(){
 	newposts=getoverpage()
 	if (newposts!=null){
 		newposts-=start
-		for (i=start+postsinpage;i<start+newposts+postsinpage&&i<posts.length;i++){
+			for (i=start+postsinpage;i<start+newposts+postsinpage&&i<posts.length;i++){
 			if (posts[i].posted==0){
 				body.innerHTML+=posttotext(posts[i])
 				posts[i].posted=1
 			}
 		}
 		for (i=start;i<start+newposts&&i<posts.length;i++){
-//			document.getElementById('_'+i).parentNode.removeChild(document.getElementById('_'+i))
+	//			document.getElementById('_'+i).parentNode.removeChild(document.getElementById('_'+i))
 		}
 		start+=newposts
 		if (start>posts.length){
