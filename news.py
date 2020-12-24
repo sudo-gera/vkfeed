@@ -484,7 +484,7 @@ class MyServer(BaseHTTPRequestHandler):
 
 token()
 
-hostPort = 29876
+hostPort = 9876
 
 st=1
 while st:
