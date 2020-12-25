@@ -18,10 +18,21 @@ posts=[]
 body=0
 start=0
 postsinpage=8
+del=0
 
 function getpost(i){
 	return document.getElementById('_'+i)
 }
+
+function autodel(){
+	statst=start
+	for (i=del;i<statst;i++){
+		delpost(i)
+	}
+	del=statst
+}
+
+setInterval(autodel,1000)
 
 function delpost(i){
 	oldpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
@@ -41,7 +52,7 @@ function onscroll(){
 			}
 		}
 		for (i=start;i<start+newposts&&i<posts.length;i++){
-			setTimeout(delpost,1024*(i-start),i)
+//			setTimeout(delpost,1024*(i-start),i)
 		}
 		start+=newposts
 		if (start>posts.length){
@@ -146,6 +157,7 @@ function onload(){
 				body.innerHTML+=posttotext(posts[i])
 				posts[i].posted=1
 			}
+			del=start
 		})
 	})
 }
