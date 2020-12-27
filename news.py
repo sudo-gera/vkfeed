@@ -98,7 +98,16 @@ def err(func):
 	run.f_n=func.__name__
 	return run
 
+def serverkill():
+	urlop("http://127.0.0.1:%s/kill" % (hostPort)).read()
+
 def killer():
+	process(killprocess,nokill=1)
+
+def killprocess():
+	print('killing')
+	serverkill()
+	myServer.server_close()
 	p=str(getpid())
 	pid=open('pid').read().split('\n')
 	end=open('end').read().split('\n')
@@ -109,6 +118,7 @@ def killer():
 			except:
 				pass
 	sleep(0.7)
+	print('killed')
 	print()
 	exit()
 
@@ -437,6 +447,8 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
 			return
+		if path=='kill':
+			process(stopserver,nokill=1)
 		if path=='json':
 			db=get_db()
 			if len(db)>1:
@@ -484,15 +496,15 @@ class MyServer(BaseHTTPRequestHandler):
 
 token()
 
-hostPort = 9876
+hostPort = 9836
 
 st=1
 while st:
- try:
-  myServer = HTTPServer(('127.0.0.1', hostPort), MyServer)
-  st=0
- except:
-  hostPort+=1
+	try:
+		myServer = HTTPServer(('127.0.0.1', hostPort), MyServer)
+		st=0
+	except:
+		hostPort+=1
 
 print("http://127.0.0.1:%s" % (hostPort))
 try:
@@ -503,6 +515,18 @@ except:
 process(service_run)
 process(manager)
 
+def stopserver(server):
+	sleep(0.2)
+	server.server_close()
+	print('stopped')
+
+def runserver():
+	try:
+		myServer.serve_forever()
+	except KeyboardInterrupt:
+		pass
+	myServer.server_close()
+	
 try:
 	myServer.serve_forever()
 except KeyboardInterrupt:
