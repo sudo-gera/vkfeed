@@ -15,25 +15,44 @@ window.addEventListener('DOMContentLoaded', onload)
 
 
 posts=[]
-shownposts=[]
 body=0
 start=0
-postsinpage=64
-scrpix=0
+postsinpage=8
+del=0
+
+function getpost(i){
+	return document.getElementById('_'+i)
+}
+
+function autodel(){
+	statst=start
+	for (i=del;i<statst;i++){
+		delpost(i)
+	}
+	del=statst
+}
+
+setInterval(autodel,1000)
+
+function delpost(i){
+	oldpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
+	getpost(i).parentNode.removeChild(getpost(i))
+	newpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
+	window.scrollBy(0,oldpos-newpos)
+}
 
 function onscroll(){
-	scrpix=Math.round(window.scrollY)
 	newposts=getoverpage()
 	if (newposts!=null){
 		newposts-=start
-			for (i=start+postsinpage;i<start+newposts+postsinpage&&i<posts.length;i++){
+		for (i=start+postsinpage;i<start+newposts+postsinpage&&i<posts.length;i++){
 			if (posts[i].posted==0){
 				body.innerHTML+=posttotext(posts[i])
 				posts[i].posted=1
 			}
 		}
 		for (i=start;i<start+newposts&&i<posts.length;i++){
-	//			document.getElementById('_'+i).parentNode.removeChild(document.getElementById('_'+i))
+//			setTimeout(delpost,1024*(i-start),i)
 		}
 		start+=newposts
 		if (start>posts.length){
@@ -57,7 +76,7 @@ function getoverpage(st=null,fi=null){
 		console.log('len=0')
 		return
 	}
-	if (document.getElementById('_'+st).getBoundingClientRect().bottom>=0){
+	if (getpost(st).getBoundingClientRect().bottom>=0){
 		return
 	}
 	if (fi<=st){
@@ -68,7 +87,7 @@ function getoverpage(st=null,fi=null){
 		return st
 	}
 	ce=Math.round((fi+st)/2)
-	if (document.getElementById('_'+ce).getBoundingClientRect().bottom<0){
+	if (getpost(ce).getBoundingClientRect().bottom<0){
 		return getoverpage(ce,fi)
 	}
 	return getoverpage(st,ce)
@@ -101,7 +120,7 @@ function posttotext(q){
 				text+='\n<img src="data:image/png;base64,'+photo+' "width="100%"><br>'
 			}
 			text+='\n<div class="orig"><h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img height="64px" src=orig.png width="64px"></a></h3></div>'
-			document.getElementById('_'+st).innerHTML=text
+			getpost(st).innerHTML=text
 		})
 	})
 	text='<div class=post id=_'+q.index+'></div>\n'
@@ -138,6 +157,7 @@ function onload(){
 				body.innerHTML+=posttotext(posts[i])
 				posts[i].posted=1
 			}
+			del=start
 		})
 	})
 }
