@@ -516,7 +516,7 @@ process(service_run)
 process(manager)
 
 def stopserver(server):
-	sleep(0.2)
+	sleep(0.1)
 	server.server_close()
 	print('stopped')
 
