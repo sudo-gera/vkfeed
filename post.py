@@ -97,6 +97,16 @@ def err(func):
 	run.f_n=func.__name__
 	return run
 
+###############################################################################
+
+fs=[]
+
+@err
+def settimeout(f,t):
+	pass
+
+
+
 def killer():
 	process(killprocess,nokill=1)
 

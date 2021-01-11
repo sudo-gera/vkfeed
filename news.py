@@ -60,9 +60,6 @@ except:
 		repo+='/'
 	open('path','w').write(repo)
 
-open('pid','w').write(str(getpid())+'\n')
-open('end','w').write('')
-
 ###############################################################################
 
 def lp(q):
@@ -180,7 +177,7 @@ hostPort = 9876
 try:
 	myServer = HTTPServer(('127.0.0.1', hostPort), MyServer)
 except:
-	print('click exit button in termux notification and try again')
+	print('click exit button in termux notification and try agawin')
 
 print("http://127.0.0.1:%s" % (hostPort))
 try:
@@ -193,5 +190,6 @@ try:
 except KeyboardInterrupt:
 	pass
 
+open('exit').write('')
 myServer.server_close()
 print()
