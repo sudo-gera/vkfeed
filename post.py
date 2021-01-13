@@ -61,7 +61,6 @@ except:
 
 open('pid','w').write(str(getpid())+'\n')
 open('end','w').write('')
-vk_token=token()
 
 ###############################################################################
 
@@ -106,7 +105,7 @@ fs=[]
 def setinterval(t):
 	def wrapper(t,f):
 		fs.append([f,t,time()])
-	return partial(wrapper,(t,))
+	return partial(wrapper,t)
 
 ###############################################################################
 
@@ -131,54 +130,6 @@ def process(p,a=(),nokill=0,force=1):
 	d.start()
 
 ###############################################################################
-
-@err
-def service(func):
-	try:
-		d=loads(open('service_db.json').read())
-	except:
-		d={}
-	try:
-		n=func.f_n
-	except:
-		n=__name__
-	d[n]={}
-	open('service_db.json','w').write(dumps(d))
-	return func
-
-@err
-def service_run():
-	while 1:
-		try:
-			d=loads(open('service_db.json').read())
-		except:
-			d={}
-		for w in d.keys():
-			try:
-				eval(w)(d[w])
-			except:
-				error()
-		open('service_db.json','w').write(dumps(d))
-		sleep(64)
-
-@err
-def service_get(n):
-	try:
-		d=loads(open('service_db.json').read())
-	except:
-		d={}
-	try:
-		return d[n][n]
-	except:
-		return None
-
-@err
-def service_wait(n):
-	while not service_get(n):
-		sleep(1)
-
-open('service_db.json','w').write(dumps({}))
-
 ###############################################################################
 
 @setinterval(60)
@@ -213,7 +164,7 @@ def monitor(d):
 
 ###############################################################################
 
-@service
+@setinterval(10)
 @err
 def wifi(d):
 	try:
@@ -290,9 +241,14 @@ def token():
 	open('token','w').write(t)
 	return t
 
+vk_token=token()
+
+###############################################################################
+
 @err
 def urlopen(*q,**w):
-	service_wait('wifi')
+	while not d['wifi']['wifi']:
+		sleep(4)
 	return urlop(*q,**w)
 
 @err
@@ -308,6 +264,8 @@ def items(q):
 		return [items(w) for w in q]
 	else:
 		return q
+
+###############################################################################
 
 @err
 def api(path,data=''):
@@ -327,6 +285,8 @@ def api(path,data=''):
 		print(ret['error']['error_msg'])
 	except:
 		pprint(ret)
+
+###############################################################################
 
 @setinterval(0.3344554433)
 @err
@@ -366,6 +326,8 @@ def feed(d):
 	q=[w for w in q if w['marked_as_ads']==0]
 	for w in q:
 		process(postworker,(w,),force=0)
+
+###############################################################################
 
 def postworker(w):
 	photodata=bytearray()
@@ -413,4 +375,6 @@ while 1:
 	m=float('inf')
 	for w in fs:
 		m=min(m,w[2])
-	sleep(m-t)
+	sleep(max(m-t,0))
+	if exists('exit'):
+		exit()

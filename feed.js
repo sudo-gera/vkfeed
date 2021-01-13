@@ -32,7 +32,7 @@ function autodel(){
 	del=statst
 }
 
-setInterval(autodel,1000)
+//setInterval(autodel,1000)
 
 function delpost(i){
 	oldpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom

@@ -60,6 +60,14 @@ except:
 		repo+='/'
 	open('path','w').write(repo)
 
+try:
+	remove('exit')
+except:
+	pass
+
+system('python3 "'+repo+'post.py" &')
+
+
 ###############################################################################
 
 def lp(q):
@@ -113,6 +121,8 @@ def token():
 	open('token','w').write(t)
 	return t
 
+token()
+
 ###############################################################################
 
 class MyServer(BaseHTTPRequestHandler):
@@ -142,7 +152,7 @@ class MyServer(BaseHTTPRequestHandler):
 			except:
 				db=[]
 			if len(db)==0:
-			db=['00_0']
+				db=['00_0']
 			db=[{'url':w} for w in db]
 			self.send_response(200)
 			self.send_header("Content-type", "text/json; charset=utf-8")
@@ -189,9 +199,6 @@ class MyServer(BaseHTTPRequestHandler):
 
 ###############################################################################
 
-token()
-system('python3 "'+path+'post.py" &')
-
 hostPort = 9876
 
 try:
@@ -210,6 +217,6 @@ try:
 except KeyboardInterrupt:
 	pass
 
-open('exit').write('')
+open('exit','w').write('')
 myServer.server_close()
 print()
