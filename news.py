@@ -96,6 +96,25 @@ def err(func):
 
 ###############################################################################
 
+@err
+def token():
+	try:
+		return open('token').read()
+	except:
+		pass
+	input('welcome to vkfeed. you will be redirected to the authorization page, where you need to grant all the permissions required for the application to work. After that, you should copy the url of the page and paste it there.\nPress enter to open the page...')
+	try:
+		run(['termux-open-url','https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1'])
+	except:
+		pass
+	print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
+	url=input('now paste the url: ')
+	t=url.split('#')[1].split('&')[0].split('=')[1]
+	open('token','w').write(t)
+	return t
+
+###############################################################################
+
 class MyServer(BaseHTTPRequestHandler):
 	@err
 	def log_message(*a):
@@ -170,6 +189,7 @@ class MyServer(BaseHTTPRequestHandler):
 
 ###############################################################################
 
+token()
 system('python3 "'+path+'post.py" &')
 
 hostPort = 9876

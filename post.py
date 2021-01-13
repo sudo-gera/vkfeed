@@ -61,6 +61,7 @@ except:
 
 open('pid','w').write(str(getpid())+'\n')
 open('end','w').write('')
+vk_token=token()
 
 ###############################################################################
 
@@ -102,31 +103,10 @@ def err(func):
 fs=[]
 
 @err
-def settimeout(f,t):
-	pass
-
-
-
-def killer():
-	process(killprocess,nokill=1)
-
-def killprocess():
-	print('killing')
-	serverkill()
-	myServer.server_close()
-	p=str(getpid())
-	pid=open('pid').read().split('\n')
-	end=open('end').read().split('\n')
-	for w in pid:
-		if w != p and w not in end:
-			try:
-				kill(int(w),SIGTERM)
-			except:
-				pass
-	sleep(0.7)
-	print('killed')
-	print()
-	exit()
+def setinterval(t):
+	def wrapper(t,f):
+		fs.append([f,t,time()])
+	return partial(wrapper,(t,))
 
 ###############################################################################
 
@@ -201,81 +181,28 @@ open('service_db.json','w').write(dumps({}))
 
 ###############################################################################
 
+@setinterval(60)
 @err
-def get_db():
+def cacheclear(d):
+	if disk_usage(cache).used>disk_usage(cache).total*0.95:
+		a=sorted(listdir('img/')+listdir('post/'))
+		for w in a:
+			try:
+				remove('post/'+w)
+			except:
+				pass
+			if disk_usage(cache).used<disk_usage(cache).total*0.9:
+				break
+
+###############################################################################
+
+@setinterval(30)
+@err
+def monitor(d):
 	try:
 		db=sorted(listdir('post/'))[::-1]
 	except:
 		db=[]
-	return db
-
-###############################################################################
-
-@err
-def token():
-	try:
-		return vk_token
-	except:
-		pass
-	try:
-		return open('token').read()
-	except:
-		pass
-	input('welcome to vkfeed. you will be redirected to the authorization page, where you need to grant all the permissions required for the application to work. After that, you should copy the url of the page and paste it there.\nPress enter to open the page...')
-	try:
-		run(['termux-open-url','https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1'])
-	except:
-		pass
-	print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
-	url=input('now paste the url: ')
-	t=url.split('#')[1].split('&')[0].split('=')[1]
-	open('token','w').write(t)
-	return t
-
-@err
-def urlopen(*q,**w):
-	service_wait('wifi')
-	return urlop(*q,**w)
-
-@err
-def items(q):
-	if type(q) == type(dict()):
-		if set(q.keys()) == set(['count', 'items']):
-			return items(q['items'])
-		else:
-			for w in q:
-				q[w] = items(q[w])
-			return q
-	elif type(q) == type(list()):
-		return [items(w) for w in q]
-	else:
-		return q
-
-@err
-def api(path,data=''):
-	if path and path[-1] not in '&?':
-		if '?' in path:
-			path+='&'
-		else:
-			path+='?'
-	sleep(1/6)
-	data=data.encode()
-	ret= loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
-	try:
-		return items(ret['response'])
-	except:
-		pass
-	try:
-		print(ret['error']['error_msg'])
-	except:
-		pprint(ret)
-
-###############################################################################
-
-@service
-@err
-def monitor(d):
-	db=get_db()
 	if 'all' in d:
 		news=len([w for w in db if w not in d['all']])
 		dels=len([w for w in d['all'] if w not in db])
@@ -340,25 +267,80 @@ def sysfree():
 	return 0
 
 ###############################################################################
+###############################################################################
 
 @err
-def manager():
-	vk_token=token()
-	start_=None
-	while 1:
-		try:
-			sleep(0.3344554433)
-			q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
-			try:
-				start_=q['next_from']
-			except:
-				start_=None
-			feed(q)
-		except:
-			error()
+def token():
+	try:
+		return vk_token
+	except:
+		pass
+	try:
+		return open('token').read()
+	except:
+		pass
+	input('welcome to vkfeed. you will be redirected to the authorization page, where you need to grant all the permissions required for the application to work. After that, you should copy the url of the page and paste it there.\nPress enter to open the page...')
+	try:
+		run(['termux-open-url','https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1'])
+	except:
+		pass
+	print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
+	url=input('now paste the url: ')
+	t=url.split('#')[1].split('&')[0].split('=')[1]
+	open('token','w').write(t)
+	return t
 
 @err
-def feed(q):
+def urlopen(*q,**w):
+	service_wait('wifi')
+	return urlop(*q,**w)
+
+@err
+def items(q):
+	if type(q) == type(dict()):
+		if set(q.keys()) == set(['count', 'items']):
+			return items(q['items'])
+		else:
+			for w in q:
+				q[w] = items(q[w])
+			return q
+	elif type(q) == type(list()):
+		return [items(w) for w in q]
+	else:
+		return q
+
+@err
+def api(path,data=''):
+	if path and path[-1] not in '&?':
+		if '?' in path:
+			path+='&'
+		else:
+			path+='?'
+	sleep(1/6)
+	data=data.encode()
+	ret= loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
+	try:
+		return items(ret['response'])
+	except:
+		pass
+	try:
+		print(ret['error']['error_msg'])
+	except:
+		pprint(ret)
+
+@setinterval(0.3344554433)
+@err
+def feed(d):
+	try:
+		start_=d['start']
+	except:
+		start_=None
+	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
+	try:
+		start_=q['next_from']
+	except:
+		start_=None
+	d['start']=start_
 	for w in q['items']:
 		if 'text' not in w:
 			w['text']=''
@@ -416,29 +398,19 @@ def postworker(w):
 	w+=photodata
 	open('post/'+postname,'wb').write(w)
 
-
+###############################################################################
 ###############################################################################
 
-@service
-@err
-def cacheclear(d):
-	if disk_usage(cache).used>disk_usage(cache).total*0.95:
-		a=sorted(listdir('img/')+listdir('post/'))
-		for w in a:
-			try:
-				remove('post/'+w)
-			except:
-				pass
-			if disk_usage(cache).used<disk_usage(cache).total*0.9:
-				break
-
-###############################################################################
-
-token()
-
-
-process(service_run)
-process(manager)
-
-	
-print()
+d=dict()
+while 1:
+	t=time()
+	for w in fs:
+		if w[2]<t:
+			if w[0].__name__ not in d.keys():
+				d[w[0].__name__]=dict()
+			w[0](d[w[0].__name__])
+			w[2]+=w[1]
+	m=float('inf')
+	for w in fs:
+		m=min(m,w[2])
+	sleep(m-t)
