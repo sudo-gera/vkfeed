@@ -90,11 +90,8 @@ def err(func):
 	def run(*q,**w):
 		try:
 			return func(*q,**w)
-		except KeyboardInterrupt:
-			killer()
 		except:
 			error()
-	run.f_n=func.__name__
 	return run
 
 ###############################################################################
@@ -114,12 +111,7 @@ def process(p,a=(),nokill=0,force=1):
 	def run(*q,**w):
 		if nokill==0:
 			open('pid','a').write(str(getpid())+'\n')
-		try:
-			p(*q,**w)
-		except KeyboardInterrupt:
-			killer()
-		except:
-			error()
+		p(*q,**w)
 		if nokill==0:
 			open('end','a').write(str(getpid())+'\n')
 	if force==0:
@@ -134,7 +126,7 @@ def process(p,a=(),nokill=0,force=1):
 
 @setinterval(60)
 @err
-def cacheclear(d):
+def cacheclear():
 	if disk_usage(cache).used>disk_usage(cache).total*0.95:
 		a=sorted(listdir('img/')+listdir('post/'))
 		for w in a:
@@ -149,24 +141,24 @@ def cacheclear(d):
 
 @setinterval(30)
 @err
-def monitor(d):
+def monitor():
 	try:
 		db=sorted(listdir('post/'))[::-1]
 	except:
 		db=[]
-	if 'all' in d:
-		news=len([w for w in db if w not in d['all']])
-		dels=len([w for w in d['all'] if w not in db])
+	if 'all' in shared:
+		news=len([w for w in db if w not in shared['all']])
+		dels=len([w for w in shared['all'] if w not in db])
 		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db))+'\n')
 	else:
 		print(asctime()+'; total posts: '+str(len(db))+'\n')
-	d['all']=db
+	shared['all']=db
 
 ###############################################################################
 
 @setinterval(10)
 @err
-def wifi(d):
+def wifi():
 	try:
 		if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
 			wifi_c=1
@@ -175,7 +167,7 @@ def wifi(d):
 	except:
 		print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install\n')
 		wifi_c=1
-	d['wifi']=wifi_c
+	shared['wifi']=wifi_c
 
 ###############################################################################
 
@@ -247,9 +239,15 @@ vk_token=token()
 
 @err
 def urlopen(*q,**w):
-	while not d['wifi']['wifi']:
-		sleep(4)
-	return urlop(*q,**w)
+	while 1:
+		try:
+			u=urlop(*q,**w)
+			shared['internet']=1
+			break
+		except:
+			shared['internet']=0
+			sleep(4)
+	return u
 
 @err
 def items(q):
@@ -290,17 +288,21 @@ def api(path,data=''):
 
 @setinterval(0.3344554433)
 @err
-def feed(d):
+def feed():
+	if 'internet' in shared and not shared['internet']:
+		return
 	try:
-		start_=d['start']
+		start_=shared['start']
 	except:
 		start_=None
+	if 'wifi' in shared and not shared['wifi']:
+		return
 	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
 	try:
 		start_=q['next_from']
 	except:
 		start_=None
-	d['start']=start_
+	shared['start']=start_
 	for w in q['items']:
 		if 'text' not in w:
 			w['text']=''
@@ -329,6 +331,7 @@ def feed(d):
 
 ###############################################################################
 
+@err
 def postworker(w):
 	photodata=bytearray()
 	w['photos']=[]
@@ -363,14 +366,12 @@ def postworker(w):
 ###############################################################################
 ###############################################################################
 
-d=dict()
+shared=dict()
 while 1:
 	t=time()
 	for w in fs:
 		if w[2]<t:
-			if w[0].__name__ not in d.keys():
-				d[w[0].__name__]=dict()
-			w[0](d[w[0].__name__])
+			w[0]()
 			w[2]+=w[1]
 	m=float('inf')
 	for w in fs:
