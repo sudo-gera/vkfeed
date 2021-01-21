@@ -61,10 +61,7 @@ except:
 
 open('pid','w').write(str(getpid())+'\n')
 open('end','w').write('')
-sll=sleep
-def sleep(q):
-	print(q)
-	sll(q)
+
 ###############################################################################
 
 def lprint(q):
@@ -152,13 +149,24 @@ def monitor():
 	except:
 		db=[]
 	if 'all' in shared:
-		#TODO
-		news=len([w for w in db if w not in shared['all']])
-		dels=len([w for w in shared['all'] if w not in db])
-		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db))+'\n')
+		news=0
+		dels=0
+		dc=0
+		sc=0
+		sb=shared['all']
+		while dc<len(db) and sc<len(sb):
+			if db[dc]==sb[sc]:
+				dc+=1
+				sc+=1
+			elif db[dc]<sb[sc]:
+				dels+=1
+				sc+=1
+			elif db[dc]>sb[sc]:
+				news+=1
+				dc+=1
+		print(asctime()+'\t new downloaded: '+str(news)+'\t old deleted: '+str(dels)+'\t total posts: '+str(len(db))+'\n')
 	else:
 		print(asctime()+'; total posts: '+str(len(db))+'\n')
-	print(2)
 	shared['all']=db
 
 ###############################################################################
@@ -308,7 +316,6 @@ def feed():
 		start_=q['next_from']
 	except:
 		start_=None
-	shared['start']=start_
 	for w in q['items']:
 		if 'text' not in w:
 			w['text']=''
@@ -332,42 +339,44 @@ def feed():
 		if 'marked_as_ads' not in w:
 			w['marked_as_ads']=0
 	q=[w for w in q if w['marked_as_ads']==0]
+	ol=len(q)
 	for w in q:
-		process(postworker,(w,),force=0)
-
-###############################################################################
-
-@err
-def postworker(w):
-	photodata=bytearray()
-	w['photos']=[]
-	if 'attachments' not in w:
-		w['attachments']=[]
-	date=str(w['date'])
-	orig=w['original']
-	for e in w['attachments']:
-		if e['type']=='photo':
-			e=e['photo']
-			e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
-			a=0
-			for r in e['sizes']:
-				if r['width']<729:
-					a=max(a,r['width'])
-			if a==0:
-				a=e['sizes'][0]['width']
-			size=[r for r in e['sizes'] if r['width']==a][0]
-			url=size['url']
-			size=[size['width'],size['height']]
-			w['photos'].append(len(photodata))
-			photodata+=urlopen(url).read()
-	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	postname=w['date']+w['orig']
-	w=dumps(w)
-	w+='\0'
-	w=w.encode()
-	w=bytearray(w)
-	w+=photodata
-	open('post/'+postname,'wb').write(w)
+		photodata=bytearray()
+		w['photos']=[]
+		if 'attachments' not in w:
+			w['attachments']=[]
+		date=str(w['date'])
+		orig=w['original']
+		for e in w['attachments']:
+			if e['type']=='photo':
+				e=e['photo']
+				e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
+				a=0
+				for r in e['sizes']:
+					if r['width']<729:
+						a=max(a,r['width'])
+				if a==0:
+					a=e['sizes'][0]['width']
+				size=[r for r in e['sizes'] if r['width']==a][0]
+				url=size['url']
+				size=[size['width'],size['height']]
+				w['photos'].append(len(photodata))
+				photodata+=urlopen(url).read()
+		w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
+		postname=w['date']+w['orig']
+		w=dumps(w)
+		w+='\0'
+		w=w.encode()
+		w=bytearray(w)
+		w+=photodata
+		sc=0
+		if exists('post/'+postname):
+			sc+=1
+		else:
+			open('post/'+postname,'wb').write(w)
+	if sc>ol*0.8:
+		start_=None
+	shared['start']=start_
 
 ###############################################################################
 ###############################################################################
@@ -377,7 +386,6 @@ while 1:
 	t=time()
 	for w in fs:
 		if w[2]<t:
-			print(w[0].__name__)
 			w[0]()
 			w[2]+=w[1]
 	m=float('inf')
