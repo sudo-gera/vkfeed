@@ -61,7 +61,10 @@ except:
 
 open('pid','w').write(str(getpid())+'\n')
 open('end','w').write('')
-
+sll=sleep
+def sleep(q):
+	print(q)
+	sll(q)
 ###############################################################################
 
 def lprint(q):
@@ -90,6 +93,8 @@ def err(func):
 	def run(*q,**w):
 		try:
 			return func(*q,**w)
+		except KeyboardInterrupt:
+			raise KeyboardInterrupt()
 		except:
 			error()
 	return run
@@ -147,11 +152,13 @@ def monitor():
 	except:
 		db=[]
 	if 'all' in shared:
+		#TODO
 		news=len([w for w in db if w not in shared['all']])
 		dels=len([w for w in shared['all'] if w not in db])
 		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db))+'\n')
 	else:
 		print(asctime()+'; total posts: '+str(len(db))+'\n')
+	print(2)
 	shared['all']=db
 
 ###############################################################################
@@ -205,7 +212,7 @@ def sysfree():
 		cu=1-cpu_f
 	except:
 		pass
-	if cu<0.3 and mu<0.9:
+	if cu<0.5 and mu<0.9:
 		return 1
 	return 0
 
@@ -370,6 +377,7 @@ while 1:
 	t=time()
 	for w in fs:
 		if w[2]<t:
+			print(w[0].__name__)
 			w[0]()
 			w[2]+=w[1]
 	m=float('inf')
