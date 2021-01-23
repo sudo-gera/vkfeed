@@ -280,7 +280,7 @@ def api(path,data=''):
 
 ###############################################################################
 
-@setinterval(0.3344554433)
+@setinterval(0.13344554433)
 @err
 def feed():
 	if 'internet' in shared and not shared['internet']:
@@ -319,6 +319,7 @@ def feed():
 		if 'marked_as_ads' not in w:
 			w['marked_as_ads']=0
 	q=[w for w in q if w['marked_as_ads']==0]
+	print('feed')
 	for w in q:
 		postname=str(w['date'])+w['original']
 		if exists('post/'+postname):
