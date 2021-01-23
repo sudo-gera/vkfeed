@@ -41,6 +41,7 @@ from os import remove
 from functools import partial
 from functools import wraps
 from base64 import b64encode
+class object: pass
 
 ###############################################################################
 
@@ -280,39 +281,70 @@ def api(path,data=''):
 
 ###############################################################################
 
+@err
+def feedget(sf=None):
+	res=api('execute.feedget'+('&start_from='+sf if sf else ''))
+	print('filesize',len(res))
+	sf,res=res
+	uids=res['profiles']['id'][:]
+	c=0
+	while uids:
+		q=api('users.get?ids='+','.join(uids[:1000]))
+		uids=uids[1000:]
+		for t in q:
+			res['profiles']['first_name'][c]=t['first_name']
+			res['profiles']['last_name'][c]=t['last_name']
+			res['profiles']['id'][c]=t['id']
+			c+=1
+	a={}
+	for w in res.keys():
+		a[w]=[]
+		for e in range(len(res[w].vaues().__iter__().__next__())):			
+			d=dict()
+			for r in res[w].keys():
+				d[e]=res[w][r][e]
+			a[w].append(d)
+	return [sf,a]
+
+###############################################################################
+
+@err
+def pageget(sf=None):
+	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+sf if sf else ''))
+	try:
+		sf=q['next_from']
+	except:
+		sf=None
+	return [sf,q]
+
+###############################################################################
+
 @setinterval(0.3344554433)
 @err
 def feed():
 	if 'internet' in shared and not shared['internet']:
 		return
 	try:
-		start_=shared['start']
+		sf=shared['start']
 	except:
-		start_=None
+		sf=None
 	if 'wifi' in shared and not shared['wifi']:
 		return
-	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+start_ if start_ else ''))
-	try:
-		start_=q['next_from']
-	except:
-		start_=None
+	sf,q=pageget(sf)
 	for w in q['items']:
 		if 'text' not in w:
 			w['text']=''
 		w['source_name']=''
-		try:
-			if w['source_id']<0:
-				d=[e for e in q['groups'] if e['id']+w['source_id']==0]
-				d=d[0]
-				d=d['name']
-				w['source_name']=d
-			else:
-				d=[e for e in q['profiles'] if e['id']==w['source_id']]
-				d=d[0]
-				d=d['first_name']+' '+d['last_name']
-				w['source_name']=d
-		except:
-			error()
+		if w['source_id']<0:
+			d=[e for e in q['groups'] if e['id']+w['source_id']==0]
+			d=d[0]
+			d=d['name']
+			w['source_name']=d
+		else:
+			d=[e for e in q['profiles'] if e['id']==w['source_id']]
+			d=d[0]
+			d=d['first_name']+' '+d['last_name']
+			w['source_name']=d
 		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
 	q=q['items']
 	for w in q:
@@ -353,7 +385,7 @@ def feed():
 			w=bytearray(w)
 			w+=photodata
 			open('post/'+postname,'wb').write(w)
-	shared['start']=start_
+	shared['start']=sf
 
 ###############################################################################
 ###############################################################################
