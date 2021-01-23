@@ -59,9 +59,6 @@ except:
 		repo+='/'
 	open('path','w').write(repo)
 
-open('pid','w').write(str(getpid())+'\n')
-open('end','w').write('')
-
 ###############################################################################
 
 def lprint(q):
@@ -90,6 +87,8 @@ def err(func):
 	def run(*q,**w):
 		try:
 			return func(*q,**w)
+		except KeyboardInterrupt:
+			raise KeyboardInterrupt()
 		except:
 			error()
 	return run
@@ -103,23 +102,6 @@ def setinterval(t):
 	def wrapper(t,f):
 		fs.append([f,t,time()])
 	return partial(wrapper,t)
-
-###############################################################################
-
-@err
-def process(p,a=(),nokill=0,force=1):
-	def run(*q,**w):
-		if nokill==0:
-			open('pid','a').write(str(getpid())+'\n')
-		p(*q,**w)
-		if nokill==0:
-			open('end','a').write(str(getpid())+'\n')
-	if force==0:
-		while not sysfree():
-			delay=2+0.25*(len(open('pid').read().split('\n'))-len(open('end').read().split('\n')))
-			sleep(delay)
-	d=Process(target=run,args=a)
-	d.start()
 
 ###############################################################################
 ###############################################################################
@@ -147,9 +129,22 @@ def monitor():
 	except:
 		db=[]
 	if 'all' in shared:
-		news=len([w for w in db if w not in shared['all']])
-		dels=len([w for w in shared['all'] if w not in db])
-		print(asctime()+'; new downloaded: '+str(news)+'; old deleted: '+str(dels)+'; total posts: '+str(len(db))+'\n')
+		news=0
+		dels=0
+		dc=0
+		sc=0
+		sb=shared['all']
+		while dc<len(db) and sc<len(sb):
+			if db[dc]==sb[sc]:
+				dc+=1
+				sc+=1
+			elif db[dc]<sb[sc]:
+				dels+=1
+				sc+=1
+			elif db[dc]>sb[sc]:
+				news+=1
+				dc+=1
+		print(asctime()+' new downloaded: '+str(news)+'\t   old deleted: '+str(dels)+'\t   total posts: '+str(len(db))+'\n')
 	else:
 		print(asctime()+'; total posts: '+str(len(db))+'\n')
 	shared['all']=db
@@ -205,7 +200,7 @@ def sysfree():
 		cu=1-cpu_f
 	except:
 		pass
-	if cu<0.3 and mu<0.9:
+	if cu<0.5 and mu<0.9:
 		return 1
 	return 0
 
@@ -272,7 +267,6 @@ def api(path,data=''):
 			path+='&'
 		else:
 			path+='?'
-	sleep(1/6)
 	data=data.encode()
 	ret= loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
 	try:
@@ -302,7 +296,6 @@ def feed():
 		start_=q['next_from']
 	except:
 		start_=None
-	shared['start']=start_
 	for w in q['items']:
 		if 'text' not in w:
 			w['text']=''
@@ -327,41 +320,40 @@ def feed():
 			w['marked_as_ads']=0
 	q=[w for w in q if w['marked_as_ads']==0]
 	for w in q:
-		process(postworker,(w,),force=0)
-
-###############################################################################
-
-@err
-def postworker(w):
-	photodata=bytearray()
-	w['photos']=[]
-	if 'attachments' not in w:
-		w['attachments']=[]
-	date=str(w['date'])
-	orig=w['original']
-	for e in w['attachments']:
-		if e['type']=='photo':
-			e=e['photo']
-			e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
-			a=0
-			for r in e['sizes']:
-				if r['width']<729:
-					a=max(a,r['width'])
-			if a==0:
-				a=e['sizes'][0]['width']
-			size=[r for r in e['sizes'] if r['width']==a][0]
-			url=size['url']
-			size=[size['width'],size['height']]
-			w['photos'].append(len(photodata))
-			photodata+=urlopen(url).read()
-	w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-	postname=w['date']+w['orig']
-	w=dumps(w)
-	w+='\0'
-	w=w.encode()
-	w=bytearray(w)
-	w+=photodata
-	open('post/'+postname,'wb').write(w)
+		postname=str(w['date'])+w['original']
+		if exists('post/'+postname):
+			pass
+		else:
+			photodata=bytearray()
+			w['photos']=[]
+			if 'attachments' not in w:
+				w['attachments']=[]
+			date=str(w['date'])
+			orig=w['original']
+			for e in w['attachments']:
+				if e['type']=='photo':
+					e=e['photo']
+					e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
+					a=0
+					for r in e['sizes']:
+						if r['width']<729:
+							a=max(a,r['width'])
+					if a==0:
+						a=e['sizes'][0]['width']
+					size=[r for r in e['sizes'] if r['width']==a][0]
+					url=size['url']
+					size=[size['width'],size['height']]
+					w['photos'].append(len(photodata))
+					photodata+=urlopen(url).read()
+			w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
+			postname=w['date']+w['orig']
+			w=dumps(w)
+			w+='\0'
+			w=w.encode()
+			w=bytearray(w)
+			w+=photodata
+			open('post/'+postname,'wb').write(w)
+	shared['start']=start_
 
 ###############################################################################
 ###############################################################################
@@ -372,7 +364,7 @@ while 1:
 	for w in fs:
 		if w[2]<t:
 			w[0]()
-			w[2]+=w[1]
+			w[2]=t+w[1]
 	m=float('inf')
 	for w in fs:
 		m=min(m,w[2])
