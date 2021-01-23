@@ -281,7 +281,6 @@ def api(path,data=''):
 
 ###############################################################################
 
-<<<<<<< HEAD
 @err
 def feedget(sf=None):
 	res=api('execute.feedget'+('&start_from='+sf if sf else ''))
@@ -320,10 +319,7 @@ def pageget(sf=None):
 
 ###############################################################################
 
-@setinterval(0.3344554433)
-=======
 @setinterval(0.13344554433)
->>>>>>> d10a31576a8fa634c04de82179bdb1a9896422fe
 @err
 def feed():
 	if 'internet' in shared and not shared['internet']:
