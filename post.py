@@ -273,7 +273,6 @@ def feedget(sf=None):
 	sk=0
 	res=api('execute.feedget'+('?start_from='+sf if sf else ''))
 	sf,res=res
-#	print(len(res['items']['date']))
 	resitems=res['items']
 	oritems=[]
 	for e in range(len(resitems.values().__iter__().__next__())):
@@ -312,9 +311,6 @@ def feedget(sf=None):
 		hh=[str(w['owner_id'])+'_'+str(w['id']) for w in d]
 		jj=ndiff(hh,gg)
 		jj=[w for w in jj if w[0]=='-']
-		if jj:
-			print(jj)
-			raise KeyboardInterrupt
 		a['items']+=d
 		items=items[100:]
 	for w in a['items']:
@@ -359,14 +355,10 @@ def feed():
 		shared['sk']=1
 	names=dict([[-w['id'],w['name']] for w in q['groups']]+[[w['id'],w['first_name']+' '+w['last_name']] for w in q['profiles']])
 	q=q['items']
-	print('to work',len(q),'other',sk)
 	for w in q:
-		print(q.index(w))
 		if 'text' not in w:
 			w['text']=''
 		postname=str(w['date'])+str(w['source_id'])+'_'+str(w['post_id'])
-		if exists('post/'+postname):
-			print('exists2')
 		photodata=bytearray()
 		w['photos']=[]
 		if 'attachments' not in w:
