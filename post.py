@@ -8,7 +8,7 @@ exit
 from urllib.request import urlopen as urlop
 from json import loads
 from json import dumps
-from urllib.parse import quote
+from urllib.parse import quote as qu
 from time import sleep
 from time import time
 from time import asctime
@@ -39,9 +39,11 @@ from os import getpid
 from os.path import exists
 from os import remove
 from functools import partial
+from functools import reduce
 from functools import wraps
 from base64 import b64encode
-class object: pass
+from base64 import b64decode
+from io import BytesIO
 
 ###############################################################################
 
@@ -66,6 +68,12 @@ def lprint(q):
 	print(q)
 	return q
 
+def ppr(*q,**w):
+	print(*q,**w)
+
+def pppr(*q,**w):
+	pprint(*q,**w)
+
 def error():
 	q=format_exc()
 	try:
@@ -79,9 +87,9 @@ def error():
 		d=d[-1]
 		d='line'+d.split('line',1)[1].split('\n')[0]
 		q=d+', '+q[-2]
-		print(q)
+		ppr(q)
 	except:
-		pprint(q,format_exc())
+		pppr(q,format_exc())
 
 def err(func):
 	@wraps(func)
@@ -145,9 +153,9 @@ def monitor():
 			elif db[dc]>sb[sc]:
 				news+=1
 				dc+=1
-		print(asctime()+' new downloaded: '+str(news)+'\t   old deleted: '+str(dels)+'\t   total posts: '+str(len(db))+'\n')
+		ppr(asctime()+' new downloaded: '+str(news)+'\t   old deleted: '+str(dels)+'\t   total posts: '+str(len(db))+'')
 	else:
-		print(asctime()+'; total posts: '+str(len(db))+'\n')
+		ppr(asctime()+'; total posts: '+str(len(db))+'')
 	shared['all']=db
 
 ###############################################################################
@@ -161,49 +169,9 @@ def wifi():
 		else:
 			wifi_c=0
 	except:
-		print('unable to check if internet is over wifi or mobile data, try to run vkfeed/install\n')
+		ppr('unable to check if internet is over wifi or mobile data, try to run vkfeed/install')
 		wifi_c=1
 	shared['wifi']=wifi_c
-
-###############################################################################
-
-@err
-def sysfree():
-	cu=mu=0
-	try:
-		t=check_output(['ps','-eo','%cpu,%mem']).decode().split('\n')
-		t=t[1:-1]
-		t=[w.split() for w in t]
-		t=list(zip(*t))
-		cu=sum(map(float,t[0]))/100
-		mu=sum(map(float,t[1]))/100
-		t=check_output(['top','-b','-n','1']).decode().split('\n')
-		t=[w.split('%') for w in t]
-		t=[w[0] for w in t if len(w)>1 and w[0].isdigit() and w[1].startswith('cpu')][0]
-		cu*=100
-		cu/=float(t)
-	except:
-		pass
-	try:
-		t=check_output(['top','-b','-n','1']).decode().split('\n')
-		t=[w if w.strip() else '' for w in t]
-		t=t[1:t.index('')]
-		t=[w.split(':',1) for w in t]
-		for w in t:
-			w[1]=w[1].replace(',','.').split('. ')
-			w[1]=[e.strip().split(' ',1)[::-1] for e in w[1]]
-			w[1]=dict(w[1])
-		t=dict(t)
-		cpu=t[[w for w in t if 'cpu' in w.lower()][0]]
-		cpu_f=float(cpu['id'])/100
-		mem=t[[w for w in t if 'mem' in w.lower()][0]]
-		mu=float(mem['used'])/float(mem['total'])
-		cu=1-cpu_f
-	except:
-		pass
-	if cu<0.5 and mu<0.9:
-		return 1
-	return 0
 
 ###############################################################################
 ###############################################################################
@@ -223,7 +191,7 @@ def token():
 		run(['termux-open-url','https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1'])
 	except:
 		pass
-	print('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
+	ppr('https://oauth.vk.com/authorize?client_id=7623880&scope=73730&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1')
 	url=input('now paste the url: ')
 	t=url.split('#')[1].split('&')[0].split('=')[1]
 	open('token','w').write(t)
@@ -234,10 +202,26 @@ vk_token=token()
 ###############################################################################
 
 @err
+def curl(q,data=None):
+	try:
+		db=loads(open('curl.json').read())
+	except:
+		db={}
+	key=b64encode(q.encode()).decode()+'_'+b64encode(b'_' if data==None else data).decode()
+	if key in db:
+		return BytesIO(b64decode(db[key].encode()))
+	sleep(1/4)
+	w=urlop(q,data=data).read()
+	db[key]=b64encode(w).decode()
+	open('curl.json','w').write(dumps(db))
+	return BytesIO(w)
+
+@err
 def urlopen(*q,**w):
 	while 1:
 		try:
-			u=urlop(*q,**w)
+#			u=urlop(*q,**w)
+			u=curl(*q,**w)
 			shared['internet']=1
 			break
 		except:
@@ -269,42 +253,74 @@ def api(path,data=''):
 		else:
 			path+='?'
 	data=data.encode()
-	ret= loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
+#	sleep(1/4)
+	ret=loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
+	try:
+		if 'error' in ret:
+			ppr(ret['error']['error_msg'])
+	except:
+		pppr(ret)
 	try:
 		return items(ret['response'])
 	except:
 		pass
-	try:
-		print(ret['error']['error_msg'])
-	except:
-		pprint(ret)
 
 ###############################################################################
 
 @err
 def feedget(sf=None):
-	res=api('execute.feedget'+('&start_from='+sf if sf else ''))
-	print('filesize',len(res))
+	osf=sf
+	sk=0
+	res=api('execute.feedget'+('?start_from='+sf if sf else ''))
 	sf,res=res
-	uids=res['profiles']['id'][:]
-	c=0
-	while uids:
-		q=api('users.get?ids='+','.join(uids[:1000]))
-		uids=uids[1000:]
-		for t in q:
-			res['profiles']['first_name'][c]=t['first_name']
-			res['profiles']['last_name'][c]=t['last_name']
-			res['profiles']['id'][c]=t['id']
-			c+=1
+#	print(len(res['items']['date']))
+	resitems=res['items']
+	oritems=[]
+	for e in range(len(resitems.values().__iter__().__next__())):
+		d=dict()
+		for r in resitems.keys():
+			d[r]=resitems[r][e]
+		if not d['marked_as_ads'] and not exists('post/'+str(d['date'])+str(d['source_id'])+'_'+str(d['post_id'])):
+			oritems.append(d)
+		else:
+			sk+=1
 	a={}
-	for w in res.keys():
-		a[w]=[]
-		for e in range(len(res[w].vaues().__iter__().__next__())):			
-			d=dict()
-			for r in res[w].keys():
-				d[e]=res[w][r][e]
-			a[w].append(d)
-	return [sf,a]
+	a['items']=[]
+	a['groups']=[]
+	a['profiles']=[]
+	if sk<len(oritems):
+		return [0,osf,a]
+	items=[str(d['source_id'])+'_'+str(d['post_id']) for d in oritems]
+	groups=[str(-d['source_id']) for d in oritems if d['source_id']<0]
+	profiles=[str(d['source_id']) for d in oritems if d['source_id']>0]
+	items.sort()
+	groups.sort()
+	profiles.sort()
+	items=reduce(lambda l,x: l if l and l[-1]==x else l+[x],items,[])
+	groups=reduce(lambda l,x: l if l and l[-1]==x else l+[x],groups,[])
+	profiles=reduce(lambda l,x: l if l and l[-1]==x else l+[x],profiles,[])
+	while groups:
+		a['groups']+=api('groups.getById','group_ids='+','.join(groups[:500]))
+		groups=groups[500:]
+	while profiles:
+		a['profiles']+=api('users.get','user_ids='+','.join(profiles[:1000]))
+		profiles=profiles[1000:]
+	while items:
+		gg=items[:100]
+#		a['items']+=api('wall.getById','posts='+gg)
+		d=api('wall.getById','posts='+','.join(gg))
+		hh=[str(w['owner_id'])+'_'+str(w['id']) for w in d]
+		jj=ndiff(hh,gg)
+		jj=[w for w in jj if w[0]=='-']
+		if jj:
+			print(jj)
+			raise KeyboardInterrupt
+		a['items']+=d
+		items=items[100:]
+	for w in a['items']:
+		w['source_id']=w['owner_id']
+		w['post_id']=w['id']
+	return [sk,sf,a]
 
 ###############################################################################
 
@@ -315,7 +331,10 @@ def pageget(sf=None):
 		sf=q['next_from']
 	except:
 		sf=None
-	return [sf,q]
+	sk=len(q['items'])
+	q['items']=[d for d in q['items'] if not (d['marked_as_ads'] if 'marked_as_ads' in d else 0) and not exists('post/'+str(d['date'])+str(d['source_id'])+'_'+str(d['post_id']))]
+	sk-=len(q['items'])
+	return [sk,sf,q]
 
 ###############################################################################
 
@@ -330,63 +349,50 @@ def feed():
 		sf=None
 	if 'wifi' in shared and not shared['wifi']:
 		return
-	sf,q=pageget(sf)
-	for w in q['items']:
+	if 'sk' not in shared.keys():
+		shared['sk']=0
+#	pageget=feedget##########
+	sk,sf,q=feedget(sf) if shared['sk'] else pageget(sf)
+	shared['start']=sf
+	shared['sk']=0
+	if sk>60:
+		shared['sk']=1
+	names=dict([[-w['id'],w['name']] for w in q['groups']]+[[w['id'],w['first_name']+' '+w['last_name']] for w in q['profiles']])
+	q=q['items']
+	print('to work',len(q),'other',sk)
+	for w in q:
+		print(q.index(w))
 		if 'text' not in w:
 			w['text']=''
-		w['source_name']=''
-		if w['source_id']<0:
-			d=[e for e in q['groups'] if e['id']+w['source_id']==0]
-			d=d[0]
-			d=d['name']
-			w['source_name']=d
-		else:
-			d=[e for e in q['profiles'] if e['id']==w['source_id']]
-			d=d[0]
-			d=d['first_name']+' '+d['last_name']
-			w['source_name']=d
-		w['original']=str(w['source_id'])+'_'+str(w['post_id'])
-	q=q['items']
-	for w in q:
-		if 'marked_as_ads' not in w:
-			w['marked_as_ads']=0
-	q=[w for w in q if w['marked_as_ads']==0]
-	print('feed')
-	for w in q:
-		postname=str(w['date'])+w['original']
+		postname=str(w['date'])+str(w['source_id'])+'_'+str(w['post_id'])
 		if exists('post/'+postname):
-			pass
-		else:
-			photodata=bytearray()
-			w['photos']=[]
-			if 'attachments' not in w:
-				w['attachments']=[]
-			date=str(w['date'])
-			orig=w['original']
-			for e in w['attachments']:
-				if e['type']=='photo':
-					e=e['photo']
-					e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
-					a=0
-					for r in e['sizes']:
-						if r['width']<729:
-							a=max(a,r['width'])
-					if a==0:
-						a=e['sizes'][0]['width']
-					size=[r for r in e['sizes'] if r['width']==a][0]
-					url=size['url']
-					size=[size['width'],size['height']]
-					w['photos'].append(len(photodata))
-					photodata+=urlopen(url).read()
-			w={'date':str(w['date']),'public':w['source_name'],'orig':w['original'],'text':w['text'],'photos':w['photos']}
-			postname=w['date']+w['orig']
-			w=dumps(w)
-			w+='\0'
-			w=w.encode()
-			w=bytearray(w)
-			w+=photodata
-			open('post/'+postname,'wb').write(w)
-	shared['start']=sf
+			print('exists2')
+		photodata=bytearray()
+		w['photos']=[]
+		if 'attachments' not in w:
+			w['attachments']=[]
+		for e in w['attachments']:
+			if e['type']=='photo':
+				e=e['photo']
+				e['sizes']=[r for r in e['sizes'] if r['type'] not in 'opqr']
+				a=0
+				for r in e['sizes']:
+					if r['width']<729:
+						a=max(a,r['width'])
+				if a==0:
+					a=e['sizes'][0]['width']
+				size=[r for r in e['sizes'] if r['width']==a][0]
+				url=size['url']
+				size=[size['width'],size['height']]
+				w['photos'].append(len(photodata))
+				photodata+=urlopen(url).read()
+		w={'date':str(w['date']),'public':names[w['source_id']],'orig':str(w['source_id'])+'_'+str(w['post_id']),'text':w['text'],'photos':w['photos']}
+		w=dumps(w)
+		w+='\0'
+		w=w.encode()
+		w=bytearray(w)
+		w+=photodata
+		open('post/'+postname,'wb').write(w)
 
 ###############################################################################
 ###############################################################################
