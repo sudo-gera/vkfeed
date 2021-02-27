@@ -41,7 +41,13 @@ function delpost(i){
 	window.scrollBy(0,oldpos-newpos)
 }
 
+scrolc=0
 function onscroll(){
+	if (scrolc){
+		scrolc-=1
+		return
+	}
+	scrolc=128
 	newposts=getoverpage()
 	if (newposts!=null){
 		newposts-=start
