@@ -20,6 +20,10 @@ start=0
 postsinpage=8
 del=0
 
+function log(q){
+	document.getElementById('log').value+=''+q+'\n'
+}
+
 function getpost(i){
 	return document.getElementById('_'+i)
 }
@@ -34,12 +38,10 @@ function autodel(){
 	window.scrollBy(0,op-getpost(statst).getBoundingClientRect().bottom)
 }
 
-setInterval(onscroll,1000)
+setInterval(onscroll,50)
 
 function delpost(i){
-	oldpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
 	getpost(i).parentNode.removeChild(getpost(i))
-	newpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
 }
 
 function onscroll(){
@@ -57,7 +59,9 @@ function onscroll(){
 			delpost(i)
 		}
 		bot2=getpost(start+newposts).getBoundingClientRect().bottom
-		setTimeout(window.scrollBy,100,bot1-bot2)
+		log(bot1)
+		log(bot2)
+		log(9999999999999)
 		start+=newposts
 		if (start>posts.length){
 			start=posts.length

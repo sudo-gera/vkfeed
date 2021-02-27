@@ -65,7 +65,10 @@ try:
 except:
 	pass
 
-system('python3 "'+repo+'post.py" &')
+if 'nocachegen'not in argv[1:]:
+	system('python3 "'+repo+'post.py" &')
+else:
+	print('no new post')
 
 
 ###############################################################################
