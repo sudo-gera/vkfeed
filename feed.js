@@ -52,10 +52,12 @@ function onscroll(){
 				posts[i].posted=1
 			}
 		}
-		autodel()
+		bot1=getpost(start+newposts).getBoundingClientRect().bottom
 		for (i=start;i<start+newposts&&i<posts.length;i++){
-//			setTimeout(delpost,1024*(i-start),i)
+			delpost(i)
 		}
+		bot2=getpost(start+newposts).getBoundingClientRect().bottom
+		setTimeout(window.scrollBy,100,bot1-bot2)
 		start+=newposts
 		if (start>posts.length){
 			start=posts.length
