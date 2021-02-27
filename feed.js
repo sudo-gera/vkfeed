@@ -10,7 +10,7 @@ function getCookie(name){
 //			document.getElementById('body').innerHTML=i
 
 
-window.addEventListener('scroll',onscroll)
+// window.addEventListener('scroll',onscroll)
 window.addEventListener('DOMContentLoaded', onload)
 
 
@@ -26,28 +26,23 @@ function getpost(i){
 
 function autodel(){
 	statst=start
+	op=getpost(statst).getBoundingClientRect().bottom
 	for (i=del;i<statst;i++){
 		delpost(i)
 	}
 	del=statst
+	window.scrollBy(0,op-getpost(statst).getBoundingClientRect().bottom)
 }
 
-//setInterval(autodel,1000)
+setInterval(onscroll,1000)
 
 function delpost(i){
 	oldpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
 	getpost(i).parentNode.removeChild(getpost(i))
 	newpos=getpost(start+postsinpage-1).getBoundingClientRect().bottom
-	window.scrollBy(0,oldpos-newpos)
 }
 
-scrolc=0
 function onscroll(){
-	if (scrolc){
-		scrolc-=1
-		return
-	}
-	scrolc=128
 	newposts=getoverpage()
 	if (newposts!=null){
 		newposts-=start
@@ -57,6 +52,7 @@ function onscroll(){
 				posts[i].posted=1
 			}
 		}
+		autodel()
 		for (i=start;i<start+newposts&&i<posts.length;i++){
 //			setTimeout(delpost,1024*(i-start),i)
 		}
