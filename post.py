@@ -269,11 +269,13 @@ def api(path,data=''):
 
 @err
 def feedget(sf=None):
+	print('feedget: ',sf)
 	osf=sf
 	sk=0
 	res=api('execute.feedget'+('?start_from='+sf if sf else ''))
 	sf,res=res
 #	print(len(res['items']['date']))
+	print('next: ',sf)
 	resitems=res['items']
 	oritems=[]
 	for e in range(len(resitems.values().__iter__().__next__())):
@@ -288,7 +290,8 @@ def feedget(sf=None):
 	a['items']=[]
 	a['groups']=[]
 	a['profiles']=[]
-	if sk<len(oritems):
+	print(len(res['items']['date']),sk,len(oritems))
+	if 500<len(oritems):
 		return [0,osf,a]
 	items=[str(d['source_id'])+'_'+str(d['post_id']) for d in oritems]
 	groups=[str(-d['source_id']) for d in oritems if d['source_id']<0]
@@ -326,6 +329,7 @@ def feedget(sf=None):
 
 @err
 def pageget(sf=None):
+	print('pageget: ',sf)
 	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+sf if sf else ''))
 	try:
 		sf=q['next_from']
@@ -353,6 +357,7 @@ def feed():
 		shared['sk']=0
 #	pageget=feedget##########
 	sk,sf,q=feedget(sf) if shared['sk'] else pageget(sf)
+	print('after: ',sf)
 	shared['start']=sf
 	shared['sk']=0
 	if sk>60:
@@ -361,7 +366,7 @@ def feed():
 	q=q['items']
 	print('to work',len(q),'other',sk)
 	for w in q:
-		print(q.index(w))
+#		print(q.index(w))
 		if 'text' not in w:
 			w['text']=''
 		postname=str(w['date'])+str(w['source_id'])+'_'+str(w['post_id'])
