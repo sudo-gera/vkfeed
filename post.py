@@ -274,11 +274,8 @@ def feedget(sf=None):
 	sk=0
 	res=api('execute.feedget'+('?start_from='+sf if sf else ''))
 	sf,res=res
-<<<<<<< HEAD
 #	print(len(res['items']['date']))
 	print('next: ',sf)
-=======
->>>>>>> baf98013b941ea6ea406fa1371408f7d41514fc0
 	resitems=res['items']
 	oritems=[]
 	for e in range(len(resitems.values().__iter__().__next__())):
@@ -365,10 +362,7 @@ def feed():
 	names=dict([[-w['id'],w['name']] for w in q['groups']]+[[w['id'],w['first_name']+' '+w['last_name']] for w in q['profiles']])
 	q=q['items']
 	for w in q:
-<<<<<<< HEAD
 #		print(q.index(w))
-=======
->>>>>>> baf98013b941ea6ea406fa1371408f7d41514fc0
 		if 'text' not in w:
 			w['text']=''
 		postname=str(w['date'])+str(w['source_id'])+'_'+str(w['post_id'])

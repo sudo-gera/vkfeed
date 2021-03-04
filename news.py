@@ -134,6 +134,8 @@ class MyServer(BaseHTTPRequestHandler):
 	def do_GET(self):
 		global cache,repo
 		path=self.path
+		path=path.split('?')
+		path,pathargs=(path+[''])[:2]
 		path=uqu(path)
 		if path[0]=='/':
 			path=path[1:]
