@@ -142,6 +142,13 @@ class MyServer(BaseHTTPRequestHandler):
 		path=uqu(path)
 		if path[0]=='/':
 			path=path[1:]
+		if pathargs==''==path:
+			path='redirect.html'
+			self.send_response(200)
+			self.send_header("Content-type", "text/html")
+			self.end_headers()
+			self.wfile.write(open(repo+path,'rb').read())
+			return
 		if path=='':
 			path='index.html'
 			self.send_response(200)
@@ -149,8 +156,6 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
 			return
-		if path=='kill':
-			process(stopserver,nokill=1)
 		if path=='json':
 			try:
 				db=sorted(listdir('post/'))[::-1]
