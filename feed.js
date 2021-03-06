@@ -38,7 +38,7 @@ function autodel(){
 	window.scrollBy(0,op-getpost(statst).getBoundingClientRect().bottom)
 }
 
-setInterval(onscroll,5000)
+setInterval(onscroll,3000)
 
 function delpost(i){
 	getpost(i).parentNode.removeChild(getpost(i))
