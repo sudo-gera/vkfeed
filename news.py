@@ -45,6 +45,9 @@ from base64 import b64encode
 
 ###############################################################################
 
+repo = str(abspath(dirname(argv[0])))
+if repo[-1]!='/':
+	repo+='/'
 home=str(Path.home())+'/'
 cache=home+'.vkfeed/'
 if not exists(cache):
@@ -55,9 +58,9 @@ if not exists('post/'):
 try:
 	repo=open('path').read()
 except:
-	repo = str(abspath(dirname(argv[0])))
-	if repo[-1]!='/':
-		repo+='/'
+#	repo = str(abspath(dirname(argv[0])))
+#	if repo[-1]!='/':
+#		repo+='/'
 	open('path','w').write(repo)
 
 try:
@@ -65,10 +68,6 @@ try:
 except:
 	pass
 
-if 'nocachegen'not in argv[1:]:
-	system('python3 "'+repo+'post.py" &')
-else:
-	print('no new post')
 
 
 ###############################################################################
@@ -100,7 +99,8 @@ def err(func):
 		try:
 			return func(*q,**w)
 		except KeyboardInterrupt:
-			killer()
+			pass
+#			killer()
 		except:
 			error()
 	return run
@@ -203,6 +203,12 @@ class MyServer(BaseHTTPRequestHandler):
 				self.end_headers()
 
 ###############################################################################
+
+if 'nocachegen'not in argv[1:]:
+	token()
+	system('python3 "'+repo+'post.py" &')
+else:
+	print('no new post')
 
 hostPort = 9876
 
