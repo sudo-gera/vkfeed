@@ -38,7 +38,7 @@ function autodel(){
 	window.scrollBy(0,op-getpost(statst).getBoundingClientRect().bottom)
 }
 
-setInterval(onscroll,500)
+setInterval(onscroll,5000)
 
 function delpost(i){
 	getpost(i).parentNode.removeChild(getpost(i))
@@ -59,9 +59,8 @@ function onscroll(){
 			delpost(i)
 		}
 		bot2=getpost(start+newposts).getBoundingClientRect().bottom
-		log(bot1)
-		log(bot2)
-		log(9999999999999)
+		window.scrollBy(0,-bot1+bot2)
+		// alert(bot1+';'+bot2)
 		start+=newposts
 		if (start>posts.length){
 			start=posts.length
