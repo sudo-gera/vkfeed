@@ -221,7 +221,7 @@ def urlopen(*q,**w):
 	while 1:
 		try:
 			u=urlop(*q,**w)
-			u=curl(*q,**w)
+			# u=curl(*q,**w)
 			shared['internet']=1
 			break
 		except:
@@ -257,7 +257,7 @@ def api(path,data=''):
 	ret=loads(urlopen('https://api.vk.com/method/'+path+'v=5.101&access_token='+token(),data=data).read().decode())
 	try:
 		if 'error' in ret:
-			ppr(ret['error']['error_msg'])
+			ppr('api err:'+str(ret['error']['error_msg']))
 	except:
 		pppr(ret)
 	try:

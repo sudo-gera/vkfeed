@@ -170,6 +170,12 @@ class MyServer(BaseHTTPRequestHandler):
 			db=dumps(db)
 			self.wfile.write(db.encode())
 			return
+		if path=='sleep':
+			self.send_response(200)
+			self.send_header("Content-type", "text/plain; charset=utf-8")
+			self.end_headers()
+			sleep(0.001)
+			return
 		if path=='post/00_0':
 			self.send_response(200)
 			self.send_header("Content-type", "file/file")
@@ -178,7 +184,9 @@ class MyServer(BaseHTTPRequestHandler):
 		path=path.split('/')
 		if len(path)==1:
 			path=[repo]+path
-		if len(path)==2 and path[0] in [repo,'post']:
+		if path[0]=='brython':
+			path[0]=repo+'brython'
+		if len(path)==2 and path[0] in [repo,'post',repo+'brython']:
 			post=0
 			if path[0]=='post':
 				post=1
