@@ -226,7 +226,10 @@ else:
 hostPort = 9876
 
 try:
-	myServer = HTTPServer(('127.0.0.1', hostPort), MyServer)
+	if 'debug' in argv[1:]:
+		myServer = HTTPServer(('0.0.0.0', hostPort), MyServer)
+	else:
+		myServer = HTTPServer(('127.0.0.1', hostPort), MyServer)
 except:
 	print('click exit button in termux notification and try agawin')
 
