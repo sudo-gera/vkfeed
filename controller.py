@@ -143,7 +143,7 @@ document.getElementById('upbutton').bind('click',up)
 def onload():
 	global body
 	body=document.getElementById('body')
-	json=urlopen('/json')[:10]
+	json=urlopen('/json')
 	global posts
 	posts=json[:]
 	start=0
