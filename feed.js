@@ -140,6 +140,7 @@ function up(){
 }
 
 function onload(){
+	document.getElementById('upbutton').addEventListener('click',up)
 	body=document.getElementById('body')
 	fetch('/json').then(function(r) {
 		r.json().then(function(json){
