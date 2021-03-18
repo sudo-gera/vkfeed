@@ -131,16 +131,16 @@ function update_ui(){
 	for(first_not_posted=globals.first_showed;first_not_posted<=len(globals.posts)-1 && globals.posts[first_not_posted].posted==1;++first_not_posted){}
 
 	bot1=get_post(globals.first_showed).getBoundingClientRect().bottom
-	for (;first_posted<globals.first_showed-globals.posts_edge;++first_posted){
+	for (;first_posted<len(global.posts) && first_posted<globals.first_showed-globals.posts_edge;++first_posted){
 		hide_post(first_posted);
 	}
-	for (;first_posted>globals.first_showed-globals.posts_edge;--first_posted){
+	for (;first_posted>0 && first_posted>globals.first_showed-globals.posts_edge;--first_posted){
 		show_post(first_posted-1);
 	}
-	for (;first_not_posted<globals.first_showed+globals.posts_in_page+globals.posts_edge;++first_not_posted){
+	for (;first_not_posted<len(global.posts) && first_not_posted<globals.first_showed+globals.posts_in_page+globals.posts_edge;++first_not_posted){
 		show_post(first_not_posted);
 	}
-	for (;first_not_posted>globals.first_showed+globals.posts_in_page+globals.posts_edge;--first_not_posted){
+	for (;first_posted>0 && first_not_posted>globals.first_showed+globals.posts_in_page+globals.posts_edge;--first_not_posted){
 		hide_post(first_not_posted-1);
 	}
 	bot2=get_post(globals.first_showed).getBoundingClientRect().bottom
