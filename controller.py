@@ -82,6 +82,7 @@ def onscroll():
 			start=len(posts)
 		
 		setCookie('start',posts[start]['url'])
+	window.view()
 	
 timer.set_interval(onscroll,3000)
 
