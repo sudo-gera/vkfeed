@@ -66,7 +66,7 @@ function urlopen(url,f){
 
 
 globals=Object()
-globals.posts_in_page=8
+globals.posts_in_page=0
 globals.posts_edge=4
 
 
