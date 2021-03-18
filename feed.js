@@ -90,9 +90,12 @@ function get_first_showed(){
 
 
 function show_post(i){
-	print('show post',i)
+	if (i<0 || i>len(globals.posts)-1){
+		printc('show post error: out of range: '+i)
+		return
+	}
 	if (globals.posts[i].posted){
-		printc('show error '+i)
+		printc('show post error: posted==1: '+i)
 		return
 	}
 	if (globals.first_showed<i){
@@ -104,8 +107,12 @@ function show_post(i){
 }
 
 function hide_post(i){
+	if (i<0 || i>len(globals.posts)-1){
+		printc('hide post error: out of range: '+i)
+		return
+	}
 	if (globals.posts[i].posted==0){
-		printc('hide error '+i)
+		printc('hide post error: posted==0 '+i)
 		return
 	}
 	body.removeChild(get_post(i))
