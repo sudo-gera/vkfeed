@@ -90,6 +90,7 @@ function get_first_showed(){
 
 
 function show_post(i){
+	print('show post',i)
 	if (globals.posts[i].posted){
 		printc('show error '+i)
 		return
@@ -114,9 +115,8 @@ function hide_post(i){
 
 setInterval(update_ui,2000)
 function update_ui(){
-	print(globals.posts)
 	globals.first_showed=get_first_showed()
-	if (globals.first_showed==null){
+	if (globals.first_showed==null || globals.first_showed==undefined){
 		return
 	}
 	for (first_posted=globals.first_showed;first_posted>=0 && globals.posts[first_posted].posted==1;--first_posted){}
