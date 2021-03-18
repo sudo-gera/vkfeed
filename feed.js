@@ -1,5 +1,5 @@
 
-function len(q){
+function len(q=globals.posts){
 	return q.length
 }
 
@@ -90,7 +90,7 @@ function get_first_showed(){
 
 
 function show_post(i){
-	if (i<0 || i>len(globals.posts)-1){
+	if (i<0 || i>len()-1){
 		printc('show post error: out of range: '+i)
 		return
 	}
@@ -107,7 +107,7 @@ function show_post(i){
 }
 
 function hide_post(i){
-	if (i<0 || i>len(globals.posts)-1){
+	if (i<0 || i>len()-1){
 		printc('hide post error: out of range: '+i)
 		return
 	}
@@ -128,16 +128,16 @@ function update_ui(){
 	}
 	for (first_posted=globals.first_showed;first_posted>=0 && globals.posts[first_posted].posted==1;--first_posted){}
 	first_posted+=1
-	for(first_not_posted=globals.first_showed;first_not_posted<=len(globals.posts)-1 && globals.posts[first_not_posted].posted==1;++first_not_posted){}
+	for(first_not_posted=globals.first_showed;first_not_posted<=len()-1 && globals.posts[first_not_posted].posted==1;++first_not_posted){}
 
 	bot1=get_post(globals.first_showed).getBoundingClientRect().bottom
-	for (;first_posted<len(global.posts) && first_posted<globals.first_showed-globals.posts_edge;++first_posted){
+	for (;first_posted<len() && first_posted<globals.first_showed-globals.posts_edge;++first_posted){
 		hide_post(first_posted);
 	}
 	for (;first_posted>0 && first_posted>globals.first_showed-globals.posts_edge;--first_posted){
 		show_post(first_posted-1);
 	}
-	for (;first_not_posted<len(global.posts) && first_not_posted<globals.first_showed+globals.posts_in_page+globals.posts_edge;++first_not_posted){
+	for (;first_not_posted<len() && first_not_posted<globals.first_showed+globals.posts_in_page+globals.posts_edge;++first_not_posted){
 		show_post(first_not_posted);
 	}
 	for (;first_posted>0 && first_not_posted>globals.first_showed+globals.posts_in_page+globals.posts_edge;--first_not_posted){
