@@ -114,6 +114,7 @@ function hide_post(i){
 
 setInterval(update_ui,2000)
 function update_ui(){
+	print(globals.posts)
 	globals.first_showed=get_first_showed()
 	if (globals.first_showed==null){
 		return
