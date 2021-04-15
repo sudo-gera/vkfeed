@@ -51,7 +51,7 @@ function post_to_text(q){
 		text+='\n<div class="orig"><h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img height="64px" src=orig.png width="64px"></a></h3></div>'
 		get_post(st).innerHTML=text
 	})
-	text='<div class=post id=_'+q.index+'>'+'<br/>'.repeat(10)+'</div>\n'
+	text='<div class=post id=_'+q.index+'>'+'<br/>'.repeat(80)+'</div>\n'
 	return text
 }
 
