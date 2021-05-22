@@ -1,3 +1,11 @@
+async function setItem(name,value) {
+	return await aurlopen('localstorage/set/'+name+'/'+JSON.stringify(value))
+}
+
+async function getitem(name) {
+	return await aurlopen('localstorage/get/'+name)
+}
+
 
 function len(q=globals.posts){
 	return q.length
@@ -21,7 +29,6 @@ function url_creator(post){
 	return post.date+post.orig
 }
 
-
 function post_to_text(q){
 	q=globals.posts[q]
 	urlopen('/post/'+q.url,(json)=>{
@@ -43,12 +50,12 @@ function post_to_text(q){
 		if (globals.posts[fi].url==url_creator(json)){
 			st=fi
 		}
-		q=json
-		text='<br><h1>'+q.public+'</h1><h3>'+q.text+'</h3><br>'
-		for (photo of q.photos){
+		qq=json
+		text='<br><h1>'+qq.public+'</h1><h3>'+qq.text+'</h3><br>'
+		for (photo of qq.photos){
 			text+='\n<img src="data:image/png;base64,'+photo+' "width="100%"><br>'
 		}
-		text+='\n<div class="orig"><h3><a target="_blank" href=https://vk.com/wall'+q.orig+'><img height="64px" src=orig.png width="64px"></a></h3></div>'
+		text+='\n<div class="orig"><h3><a target="_blank" href=https://vk.com/wall'+qq.orig+'><img height="64px" src=orig.png width="64px"></a></h3></div>'
 		get_post(st).innerHTML=text
 	})
 	text='<div class=post id=_'+q.index+'>'+'<br/>'.repeat(80)+'</div>\n'
@@ -60,6 +67,13 @@ function urlopen(url,f){
 	fetch(url).then((r)=>{r.json().then(f)})
 }
 
+async function aurlopen(url){
+	return await((await(fetch(url))).json())
+}
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -121,7 +135,7 @@ function hide_post(i){
 
 
 setInterval(update_ui,2000)
-function update_ui(){
+async function update_ui(){
 	globals.first_showed=get_first_showed()
 	if (globals.first_showed==null || globals.first_showed==undefined){
 		return
@@ -148,8 +162,7 @@ function update_ui(){
 
 	globals.first_posted=first_posted
 	globals.first_not_posted=first_not_posted
-	localStorage.setItem('first_posted',globals.posts[globals.first_posted+globals.posts_edge].url)
-
+	setItem	('first_posted',globals.posts[globals.first_posted+globals.posts_edge].url)
 }
 
 
@@ -158,36 +171,35 @@ function update_ui(){
 
 
 window.addEventListener('DOMContentLoaded', onload)
-function onload(){
+async function onload(){
 	globals.upbutton=document.getElementById('upbutton')
 	globals.upbutton.addEventListener('click',up)
 	globals.body=document.getElementById('body')
-	urlopen('json',(json)=>{
-		globals.posts=json
-		globals.first_posted=0
-		first_posted=localStorage.getItem('first_posted')
-		if (localStorage.getItem('up')=='1'){
-			localStorage.setItem('up','0')
-			first_posted=null
+	json=await aurlopen('json')
+	globals.posts=json
+	globals.first_posted=0
+	first_posted=await getitem('first_posted')
+	if (await getitem('up')=='1'){
+		setItem('up','0')
+		first_posted=null
+	}
+	i=0
+	for (post of globals.posts){
+		post.index=i
+		post.posted=0
+		if (first_posted==post.url){
+			globals.first_posted=i
 		}
-		i=0
-		for (post of globals.posts){
-			post.index=i
-			post.posted=0
-			if (first_posted==post.url){
-				globals.first_posted=i
-			}
-			i++
-		}
-		globals.body.innerHTML=post_to_text(globals.first_posted)
-		globals.posts[globals.first_posted].posted=1
-		globals.first_not_posted=globals.first_posted+1
-		update_ui()
-	})
+		i++
+	}
+	globals.body.innerHTML=post_to_text(globals.first_posted)
+	globals.posts[globals.first_posted].posted=1
+	globals.first_not_posted=globals.first_posted+1
+	update_ui()
 }
 
 
-function up(){
-	localStorage.setItem('up','1')
+async function up(){
+	setItem('up','1')
 	document.location.reload()
 }
