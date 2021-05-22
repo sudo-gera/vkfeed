@@ -2,7 +2,7 @@ async function setItem(name,value) {
 	return await aurlopen('localstorage/set/'+name+'/'+JSON.stringify(value))
 }
 
-async function getitem(name) {
+async function getItem(name) {
 	return await aurlopen('localstorage/get/'+name)
 }
 
@@ -172,14 +172,14 @@ async function update_ui(){
 
 window.addEventListener('DOMContentLoaded', onload)
 async function onload(){
-	globals.upbutton=document.getElementById('upbutton')
-	globals.upbutton.addEventListener('click',up)
+	document.getElementById('upbutton').addEventListener('click',up)
+	document.getElementById('startpagebutton').addEventListener('click',startpage)
 	globals.body=document.getElementById('body')
 	json=await aurlopen('json')
 	globals.posts=json
 	globals.first_posted=0
-	first_posted=await getitem('first_posted')
-	if (await getitem('up')=='1'){
+	first_posted=await getItem('first_posted')
+	if (await getItem('up')=='1'){
 		setItem('up','0')
 		first_posted=null
 	}
@@ -202,4 +202,8 @@ async function onload(){
 async function up(){
 	setItem('up','1')
 	document.location.reload()
+}
+
+async function startpage(){
+	window.open("/startpage.html","_self")
 }
