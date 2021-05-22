@@ -68,7 +68,10 @@ try:
 except:
 	pass
 
-
+try:
+	loads(open('localstorage').read())
+except:
+	open('localstorage','w').write('{}')
 
 ###############################################################################
 
@@ -170,50 +173,60 @@ class MyServer(BaseHTTPRequestHandler):
 			db=dumps(db)
 			self.wfile.write(db.encode())
 			return
-		if path=='sleep':
-			self.send_response(200)
-			self.send_header("Content-type", "text/plain; charset=utf-8")
-			self.end_headers()
-			sleep(0.001)
-			return
 		if path=='post/00_0':
 			self.send_response(200)
 			self.send_header("Content-type", "file/file")
 			self.end_headers()
 			self.wfile.write(dumps({'date':'0','public':'vkfeed','orig':'0_0','text':'creating cache...\nconnect to wifi, wait 10 minutes and refresh the page','photos':[]}).encode())
 		path=path.split('/')
-		if len(path)==1:
-			path=[repo]+path
-		if path[0]=='brython':
-			path[0]=repo+'brython'
-		if len(path)==2 and path[0] in [repo,'post',repo+'brython']:
-			post=0
-			if path[0]=='post':
-				post=1
-			path='/'.join(path)
-			if exists(path):
-				self.send_response(200)
-				self.send_header("Content-type", "file/file")
-				self.end_headers()
-				file=open(path,'rb').read()
-				if post:
-					file=bytearray(file)
-					file=file.split('\0'.encode(),1)
-					j=loads(file[0].decode())
-					p=j['photos']
-					w=0
-					while w!=len(p):
-						p[w]=file[1][p[w]:p[w+1] if w+1<len(p) else len(file[1])]
-						w+=1
-					p=[b64encode(w).decode() for w in p]
-					j['photos']=p
-					file=dumps(j)
-					file=file.encode()
-				self.wfile.write(file)
-			else:
-				self.send_response(404)
-				self.send_header("Content-type", "file/file")
-				self.end_headers()
+		if path[0]=='localstorage':
+			ls=loads(open('localstorage').read())
+			if path[1]=='set':
+				ls[path[2]]=path[3]
+				open('localstorage','w').write(dumps(ls))
+				ls='""'
+			elif path[1]=='get':
+				try:
+					ls=ls[path[2]]
+				except:
+					ls=dumps(None)
+			self.send_response(200)
+			self.send_header("Content-type", "file/file")
+			self.end_headers()
+			self.wfile.write(ls.encode())
+		else:
+			if len(path)==1:
+				path=[repo]+path
+			if path[0]=='brython':
+				path[0]=repo+'brython'
+			if len(path)==2 and path[0] in [repo,'post',repo+'brython']:
+				post=0
+				if path[0]=='post':
+					post=1
+				path='/'.join(path)
+				if exists(path):
+					self.send_response(200)
+					self.send_header("Content-type", "file/file")
+					self.end_headers()
+					file=open(path,'rb').read()
+					if post:
+						file=bytearray(file)
+						file=file.split('\0'.encode(),1)
+						j=loads(file[0].decode())
+						p=j['photos']
+						w=0
+						while w!=len(p):
+							p[w]=file[1][p[w]:p[w+1] if w+1<len(p) else len(file[1])]
+							w+=1
+						p=[b64encode(w).decode() for w in p]
+						j['photos']=p
+						file=dumps(j)
+						file=file.encode()
+					self.wfile.write(file)
+				else:
+					self.send_response(404)
+					self.send_header("Content-type", "file/file")
+					self.end_headers()
 
 ###############################################################################
 
