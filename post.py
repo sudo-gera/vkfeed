@@ -27,6 +27,7 @@ from sys import argv
 from pathlib import Path
 from pprint import pprint
 from multiprocessing import Process
+from threading import Thread
 from subprocess import check_output
 from os.path import abspath
 from os.path import dirname
@@ -62,6 +63,7 @@ except:
 		repo+='/'
 	open('path','w').write(repo)
 
+shared=dict()
 ###############################################################################
 
 def lprint(q):
@@ -97,20 +99,50 @@ def err(func):
 		try:
 			return func(*q,**w)
 		except KeyboardInterrupt:
-			raise KeyboardInterrupt()
+			if func.__name__=='setintervalinitiator':
+				pass
+			else:
+				raise KeyboardInterrupt()
 		except:
 			error()
 	return run
 
 ###############################################################################
 
-fs=[]
+# fs=[]
+
+@err
+def setintervalrunner(t,f):
+	while 1:
+		t1=time()
+		f()
+		ts=max(t1-time()+t,0)
+		while ts:
+			if ts>4:
+				sleep(4)
+				ts-=4
+			else:
+				sleep(ts)
+				ts=0
+			if exists('exit'):
+				raise KeyboardInterrupt()
+		if exists('exit'):
+			raise KeyboardInterrupt()
+
+@err
+def setintervalinitiator(q):
+	q()
+
+
+@err
+def setintervalwrapper(t,f):
+	a=Thread(target=partial(setintervalinitiator,partial(setintervalrunner,t,f)))
+	a.start()
+	return f
 
 @err
 def setinterval(t):
-	def wrapper(t,f):
-		fs.append([f,t,time()])
-	return partial(wrapper,t)
+	return partial(setintervalwrapper,t)
 
 ###############################################################################
 ###############################################################################
@@ -119,7 +151,7 @@ def setinterval(t):
 @err
 def cacheclear():
 	if disk_usage(cache).used>disk_usage(cache).total*0.95:
-		a=sorted(listdir('img/')+listdir('post/'))
+		a=sorted(listdir('post/'))
 		for w in a:
 			try:
 				remove('post/'+w)
@@ -270,13 +302,13 @@ def api(path,data=''):
 
 @err
 def feedget(sf=None):
-	print('feedget: ',sf)
+	# print('feedget: ',sf)
 	osf=sf
 	sk=0
 	res=api('execute.feedget'+('?start_from='+sf if sf else ''))
 	sf,res=res
 #	print(len(res['items']['date']))
-	print('next: ',sf)
+	# print('next: ',sf)
 	resitems=res['items']
 	oritems=[]
 	for e in range(len(resitems.values().__iter__().__next__())):
@@ -291,7 +323,7 @@ def feedget(sf=None):
 	a['items']=[]
 	a['groups']=[]
 	a['profiles']=[]
-	print(len(res['items']['date']),sk,len(oritems))
+	# print(len(res['items']['date']),sk,len(oritems))
 	if 500<len(oritems):
 		return [0,osf,a]
 	items=[str(d['source_id'])+'_'+str(d['post_id']) for d in oritems]
@@ -327,7 +359,7 @@ def feedget(sf=None):
 
 @err
 def pageget(sf=None):
-	print('pageget: ',sf)
+	# print('pageget: ',sf)
 	q=api('newsfeed.get?filters=post&max_photos=100&count=100'+('&start_from='+sf if sf else ''))
 	try:
 		sf=q['next_from']
@@ -355,7 +387,7 @@ def feed():
 		shared['sk']=0
 #	pageget=feedget##########
 	sk,sf,q=feedget(sf) if shared['sk'] else pageget(sf)
-	print('after: ',sf)
+	# print('after: ',sf)
 	shared['start']=sf
 	shared['sk']=0
 	if sk>60:
@@ -396,17 +428,3 @@ def feed():
 
 ###############################################################################
 ###############################################################################
-
-shared=dict()
-while 1:
-	t=time()
-	for w in fs:
-		if w[2]<t:
-			w[0]()
-			w[2]=t+w[1]
-	m=float('inf')
-	for w in fs:
-		m=min(m,w[2])
-	sleep(max(m-t,0))
-	if exists('exit'):
-		exit()

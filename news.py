@@ -42,6 +42,7 @@ from os import remove
 from functools import partial
 from functools import wraps
 from base64 import b64encode
+from urllib.parse import parse_qs
 
 ###############################################################################
 
@@ -152,6 +153,7 @@ class MyServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(open(repo+path,'rb').read())
 			return
+		pathargs=parse_qs(pathargs)
 		if path=='':
 			path='index.html'
 			self.send_response(200)
@@ -206,7 +208,10 @@ class MyServer(BaseHTTPRequestHandler):
 				path='/'.join(path)
 				if exists(path):
 					self.send_response(200)
-					self.send_header("Content-type", "file/file")
+					if path.endswith('.html'):
+						self.send_header("Content-type", "text/html")
+					else:
+						self.send_header("Content-type", "file/file")
 					self.end_headers()
 					file=open(path,'rb').read()
 					if post:
@@ -256,6 +261,7 @@ try:
 	myServer.serve_forever()
 except KeyboardInterrupt:
 	pass
+
 
 open('exit','w').write('')
 myServer.server_close()
