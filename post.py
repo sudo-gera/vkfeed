@@ -126,7 +126,8 @@ def cacheclear():
 			except:
 				pass
 			if disk_usage(cache).used<disk_usage(cache).total*0.9:
-				break
+				return
+
 
 ###############################################################################
 
