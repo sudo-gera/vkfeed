@@ -193,7 +193,7 @@ def monitor():
 
 ###############################################################################
 
-@setinterval(10)
+@setinterval(100)
 @err
 def wifi():
 	try:
@@ -255,6 +255,8 @@ def urlopen(*q,**w):
 		try:
 			u=urlop(*q,**w)
 			# u=curl(*q,**w)
+			if 'internet' in shared and shared['internet']==0:
+				wifi()
 			shared['internet']=1
 			break
 		except:
