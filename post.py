@@ -197,8 +197,8 @@ def monitor():
 @err
 def wifi():
 	try:
-#		if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
-		if 1:
+		if loads(check_output('termux-wifi-connectioninfo'))['supplicant_state'] == 'COMPLETED':
+#		if 1:
 			wifi_c=1
 		else:
 			wifi_c=0
