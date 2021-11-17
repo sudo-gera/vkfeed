@@ -235,7 +235,7 @@ class MyServer(BaseHTTPRequestHandler):
 
 ###############################################################################
 
-if 'nocachegen'not in argv[1:]:
+if 'cachegen' in argv[1:]:
 	token()
 	system('python3 "'+repo+'post.py" &')
 else:
