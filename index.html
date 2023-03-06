@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>vkfeed</title>
-        <link rel="icon" href="./favicon.ico">
-        <link rel="stylesheet" href="./main.css">
-        <!-- <script type="text/javascript" src="./post.js">
-        </script> -->
-        <!-- <script type="text/javascript" src="./main.js">
-        </script> -->
-        <script type="text/javascript" src="./feed.js">
-        </script>
-    </head>
-    <body>
-        <div id="body">
-        </div>
-        <div class="bottom-div">
-            <div class="flex-div">
-                <div class="bottom-button" id="bottom_news">
-                    <div class="center">
-                        <img style="margin: 40px;" height="40px" src="favicon.ico">
-                    </div>
-                </div>
-                <div class="bottom-button" id="bottom_settings">
-                    <div class="center">
-                        <img style="margin: 40px;" height="40px" src="favicon.ico">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
+<head>
+	<title>vkfeed</title>
+	<style type="text/css">
+		.post{
+			background-color: #13002f;
+			overflow-wrap: anywhere;
+			text-align: center;
+			border-radius: 64px;
+			margin: 16px;
+			padding-bottom: 16px;
+		}
+		body {
+			background-color: #160057;
+			color: #FFFFFF;
+		}
+		.orig{
+			margin-top: 34px;
+		}
+		.log {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 95%;
+		}
+	</style>
+	<script type="text/javascript">
+	window.open("/redirect.html?"+new Date().getTime(),"_self")
+	</script>
+</head>
+<body>
+	<div id="body">
+		loading...
+	</div>
+</body>
 </html>

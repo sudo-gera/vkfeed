@@ -1,12 +1,20 @@
-cd ~
-if ! [ -d ~/vkfeed ]
-then
-    git clone --depth 1 https://github.com/sudo-gera/vkfeed
+if [ $# -lt 1 ]
+then cd ~
+else cd "$1"
 fi
-if ! [ -f ~/vkfeed.py ]
-then
-    ln -s ~/vkfeed/vkfeed.py ~/vkfeed.py
+
+if ! [ -d ./vkfeed_repo ]
+then git clone --depth 1 https://github.com/sudo-gera/vkfeed ./vkfeed_repo
 fi
-cd ~/vkfeed
-python3 ~/vkfeed/setup.py
-echo "0KPRgdGC0LDQvdC+0LLQu9C10L3Qvi4K0KLQtdC/0LXRgNGMINCy0YDQtdC80Y8g0L3QsNC/0LjRgdCw0YLRjCDQutC+0LzQsNC90LTRgyAbWzkybXZrZmVlZBtbMG0K" | base64 -d
+
+cd ./vkfeed_repo
+
+if ! [ -f ~/vkfeed ]
+then
+    echo "cd \"$(pwd)\"" > ~/vkfeed
+    echo "python3 vkfeed.py" >> ~/vkfeed
+    chmod 744 ~/vkfeed
+fi
+
+#     echo -e "Всё готово! Время запустить команду \x1b[92m~/vkfeed\x1b[0m" | base64
+echo "0JLRgdGRINCz0L7RgtC+0LLQviEg0JLRgNC10LzRjyDQt9Cw0L/Rg9GB0YLQuNGC0Ywg0LrQvtC80LDQvdC00YMgG1s5Mm1+L3ZrZmVlZBtbMG0K" | base64 -d
